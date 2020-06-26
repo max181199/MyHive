@@ -1,0 +1,6 @@
+web/build
+web/build-dev
+web/node_modules
+parser/node_modules
+web/package-lock.json
+web/logs
