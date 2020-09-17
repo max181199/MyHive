@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
+import { Analyzer } from '../services/analyzer'
 
 import AceEditor from "react-ace";
 
@@ -82,7 +83,7 @@ const CodeEditor = ({ tables }) => {
         mode="mysql"
         theme="xcode"
         name="blah2"
-        onChange={(value) => setValue(value)}
+        onChange={(value) =>{Analyzer(value,tables);setValue(value)}}
         fontSize={16}
         width="100%"
         height="calc(100% - 45px)"
