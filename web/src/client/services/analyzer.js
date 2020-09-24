@@ -2,6 +2,9 @@
 const O = [] // Удивительно, правда)
 
 const KeyWord = [
+  'ALL', 'DISTINCT', 'FROM', 'WHERE', 'GROUP BY', 'HAVING', 'WINDOW',
+  'UNION', 'INTERSECT', 'EXCEPT', 'ORDER BY', 'LIMIT', 'OFFSET',
+  'FETCH', 'FOR',
   'A', 'ABORT', 'ABS', 'ABSENT', 'ABSOLUTE', 'ACCESS', 'ACCORDING', 'ACTION',
   'ADA', 'ADD', 'ADMIN', 'AFTER', 'AGGREGATE', 'ALL', 'ALLOCATE', 'ALSO', 'ALTER',
   'ALWAYS', 'ANALYSE', 'ANALYZE', 'AND', 'ANY', 'ARE', 'ARRAY', 'ARRAY_AGG',
@@ -130,7 +133,15 @@ const Analyzer = (string, data) => {
                 i++;
               } else
               if ( /\$/.test(el[i]) || dstr ){
-                if (/\$/.test(el[i])){
+                if ( /\$/.test(el[i])  &&  /\d/.test(el[i+1]) ){
+                  i++;i++;
+                  while(/\d/.test(el[i])){
+                    i++;
+                  }
+                  lexem.push('@PAR')
+                } else 
+                if (/\$/.test(el[i]))
+                {
                   dstr = true;
                   i++;
                   cdol++;
@@ -176,7 +187,7 @@ const Analyzer = (string, data) => {
                 }
                 lexem.push('@NUM')
               }
-               else i++;
+               else {lexem.push(el[i]);i++;}
             }
           }
         });
