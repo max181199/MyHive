@@ -34,42 +34,19 @@ const KeyWord = [
   'QUOTE', 'RANGE', 'RANK', 'READ', 'READS', 'REAL', 'REASSIGN', 'RECHECK', 'RECOVERY', 'RECURSIVE', 'REF', 'REFERENCES', 'REFERENCING', 'REFRESH', 'REGR_AVGX', 'REGR_AVGY', 'REGR_COUNT', 'REGR_INTERCEPT', 'REGR_R2', 'REGR_SLOPE', 'REGR_SXX', 'REGR_SXY', 'REGR_SYY', 'REINDEX', 'RELATIVE', 'RELEASE', 'RENAME', 'REPEATABLE', 'REPLACE', 'REPLICA', 'REQUIRING', 'RESET', 'RESPECT', 'RESTART', 'RESTORE', 'RESTRICT', 'RESULT', 'RETURN', 'RETURNED_CARDINALITY', 'RETURNED_LENGTH', 'RETURNED_OCTET_LENGTH', 'RETURNED_SQLSTATE', 'RETURNING', 'RETURNS', 'REVOKE', 'RIGHT', 'ROLE', 'ROLLBACK', 'ROLLUP', 'ROUTINE', 'ROUTINE_CATALOG', 'ROUTINE_NAME', 'ROUTINE_SCHEMA', 'ROW', 'ROWS', 'ROW_COUNT', 'ROW_NUMBER', 'RULE', 'SAVEPOINT', 'SCALE', 'SCHEMA', 'SCHEMA_NAME', 'SCOPE', 'SCOPE_CATALOG', 'SCOPE_NAME', 'SCOPE_SCHEMA', 'SCROLL', 'SEARCH', 'SECOND', 'SECTION', 'SECURITY', 'SELECT', 'SELECTIVE', 'SELF', 'SENSITIVE', 'SEQUENCE', 'SEQUENCES', 'SERIALIZABLE', 'SERVER', 'SERVER_NAME', 'SESSION', 'SESSION_USER', 'SET', 'SETOF', 'SETS', 'SHARE', 'SHOW', 'SIMILAR', 'SIMPLE', 'SIZE', 'SMALLINT', 'SNAPSHOT', 'SOME', 'SOURCE', 'SPACE', 'SPECIFIC', 'SPECIFICTYPE', 'SPECIFIC_NAME', 'SQL', 'SQLCODE', 'SQLERROR', 'SQLEXCEPTION', 'SQLSTATE', 'SQLWARNING', 'SQRT', 'STABLE', 'STANDALONE', 'START', 'STATE', 'STATEMENT', 'STATIC', 'STATISTICS', 'STDDEV_POP', 'STDDEV_SAMP', 'STDIN', 'STDOUT', 'STORAGE', 'STRICT', 'STRIP', 'STRUCTURE', 'STYLE', 'SUBCLASS_ORIGIN', 'SUBMULTISET', 'SUBSTRING', 'SUBSTRING_REGEX', 'SUCCEEDS', 'SUM', 'SYMMETRIC', 'SYSID', 'SYSTEM', 'SYSTEM_TIME', 'SYSTEM_USER', 'T', 'TABLE', 'TABLES', 'TABLESAMPLE', 'TABLESPACE', 'TABLE_NAME', 'TEMP', 'TEMPLATE', 'TEMPORARY', 'TEXT', 'THEN', 'TIES', 'TIME', 'TIMESTAMP', 'TIMEZONE_HOUR', 'TIMEZONE_MINUTE', 'TO', 'TOKEN', 'TOP_LEVEL_COUNT', 'TRAILING', 'TRANSACTION', 'TRANSACTIONS_COMMITTED', 'TRANSACTIONS_ROLLED_BACK', 'TRANSACTION_ACTIVE', 'TRANSFORM', 'TRANSFORMS', 'TRANSLATE', 'TRANSLATE_REGEX', 'TRANSLATION', 'TREAT', 'TRIGGER', 'TRIGGER_CATALOG', 'TRIGGER_NAME', 'TRIGGER_SCHEMA', 'TRIM', 'TRIM_ARRAY', 'TRUE', 'TRUNCATE', 'TRUSTED', 'TYPE', 'TYPES', 'UESCAPE', 'UNBOUNDED', 'UNCOMMITTED', 'UNDER', 'UNENCRYPTED', 'UNION', 'UNIQUE', 'UNKNOWN', 'UNLINK', 'UNLISTEN', 'UNLOGGED', 'UNNAMED', 'UNNEST', 'UNTIL', 'UNTYPED', 'UPDATE', 'UPPER', 'URI', 'USAGE', 'USER', 'USER_DEFINED_TYPE_CATALOG', 'USER_DEFINED_TYPE_CODE', 'USER_DEFINED_TYPE_NAME', 'USER_DEFINED_TYPE_SCHEMA', 'USING', 'VACUUM', 'VALID', 'VALIDATE', 'VALIDATOR', 'VALUE', 'VALUES', 'VALUE_OF', 'VARBINARY', 'VARCHAR', 'VARIADIC', 'VARYING', 'VAR_POP', 'VAR_SAMP', 'VERBOSE', 'VERSION', 'VERSIONING', 'VIEW', 'VOLATILE', 'WHEN', 'WHENEVER', 'WHERE', 'WHITESPACE', 'WIDTH_BUCKET', 'WINDOW', 'WITH', 'WITHIN', 'WITHOUT', 'WORK', 'WRAPPER', 'WRITE', 'XML', 'XMLAGG', 'XMLATTRIBUTES', 'XMLBINARY', 'XMLCAST', 'XMLCOMMENT', 'XMLCONCAT', 'XMLDECLARATION', 'XMLDOCUMENT', 'XMLELEMENT', 'XMLEXISTS', 'XMLFOREST', 'XMLITERATE', 'XMLNAMESPACES', 'XMLPARSE', 'XMLPI', 'XMLQUERY', 'XMLROOT', 'XMLSCHEMA', 'XMLSERIALIZE', 'XMLTABLE', 'XMLTEXT', 'XMLVALIDATE', 'YEAR', 'YES', 'ZONE'
 ]
 
-
-const FormingResult = (state, data, opt) => {
+const FormingResult = (state, data) => {
   switch (state) {
     case 'O':
       return O;
+    case 'Start':
+      return ['WIDTH','SELECT']
     case 'TableName':
       return ([
-        ...data.consultant.reduce((ar, current) => { return ([...ar, { table: current.table, scheme: 'consultant' }]) }, []),
-        ...data.uploaded.reduce((ar, current) => { return ([...ar, { table: current.table, scheme: 'uploaded' }]) }, []),
-        ...data.userbase.reduce((ar, current) => { return ([...ar, { table: current.table, scheme: 'userbase' }]) }, []),
+        ...data.consultant.reduce((ar, current) => { return ([...ar, { name: current.table, scheme: 'consultant' }]) }, []),
+        ...data.uploaded.reduce((ar, current) => { return ([...ar, { name: current.table, scheme: 'uploaded' }]) }, []),
+        ...data.userbase.reduce((ar, current) => { return ([...ar, { name: current.table, scheme: 'userbase' }]) }, []),
       ]);
-    case 'ColumnName': {
-      if (opt.columnType && opt.tableName) {
-        return ([
-          '*',
-          ...data.consultant.filter((tb) => opt.tableName.includes(tb.table)).reduce((ar, current) => { return ([...ar, ...current.columns.filter((cl) => opt.columnType.includes(cl.type)).map((el) => { return ({ ...el, table: current.table }) })]) }, []),
-          ...data.uploaded.filter((tb) => opt.tableName.includes(tb.table)).reduce((ar, current) => { return ([...ar, ...current.columns.filter((cl) => opt.columnType.includes(cl.type)).map((el) => { return ({ ...el, table: current.table }) })]) }, []),
-          ...data.userbase.filter((tb) => opt.tableName.includes(tb.table)).reduce((ar, current) => { return ([...ar, ...current.columns.filter((cl) => opt.columnType.includes(cl.type)).map((el) => { return ({ ...el, table: current.table }) })]) }, []),
-        ]);
-      }
-      if (opt.tableName) {
-        return ([
-          '*',
-          ...data.consultant.filter((tb) => opt.tableName.includes(tb.table)).reduce((ar, current) => { return ([...ar, ...current.columns.map((el) => { return ({ ...el, table: current.table }) })]) }, []),
-          ...data.uploaded.filter((tb) => opt.tableName.includes(tb.table)).reduce((ar, current) => { return ([...ar, ...current.columns.map((el) => { return ({ ...el, table: current.table }) })]) }, []),
-          ...data.userbase.filter((tb) => opt.tableName.includes(tb.table)).reduce((ar, current) => { return ([...ar, ...current.columns.map((el) => { return ({ ...el, table: current.table }) })]) }, []),
-        ]);
-      }
-      if (opt.columnType) {
-        return ([
-          '*',
-          ...data.consultant.reduce((ar, current) => { return ([...ar, ...current.columns.filter((cl) => opt.columnType.includes(cl.type)).map((el) => { return ({ ...el, table: current.table }) })]) }, []),
-          ...data.uploaded.reduce((ar, current) => { return ([...ar, ...current.columns.filter((cl) => opt.columnType.includes(cl.type)).map((el) => { return ({ ...el, table: current.table }) })]) }, []),
-          ...data.userbase.reduce((ar, current) => { return ([...ar, ...current.columns.filter((cl) => opt.columnType.includes(cl.type)).map((el) => { return ({ ...el, table: current.table }) })]) }, []),
-        ]);
-      }
+    case 'ColumnName': {  
       return ([
         '*',
         ...data.consultant.reduce((ar, current) => { return ([...ar, ...current.columns.map((el) => { return ({ ...el, table: current.table }) })]) }, []),
@@ -79,14 +56,12 @@ const FormingResult = (state, data, opt) => {
     }
     default:
       return ([
-        ...data.consultant.reduce((ar, current) => { return ([...ar, { table: current.table, scheme: 'consultant' }, ...current.columns.map((el) => { return ({ ...el, table: current.table }) })]) }, []),
-        ...data.uploaded.reduce((ar, current) => { return ([...ar, { table: current.table, scheme: 'uploaded' }, ...current.columns.map((el) => { return ({ ...el, table: current.table }) })]) }, []),
-        ...data.userbase.reduce((ar, current) => { return ([...ar, { table: current.table, scheme: 'userbase' }, ...current.columns.map((el) => { return ({ ...el, table: current.table }) })]) }, []),
-        ...START,
+        ...data.consultant.reduce((ar, current) => { return ([...ar, { name: current.table, scheme: 'consultant' }, ...current.columns.map((el) => { return ({ ...el, table: current.table }) })]) }, []),
+        ...data.uploaded.reduce((ar, current) => { return ([...ar, { name: current.table, scheme: 'uploaded' }, ...current.columns.map((el) => { return ({ ...el, table: current.table }) })]) }, []),
+        ...data.userbase.reduce((ar, current) => { return ([...ar, { name: current.table, scheme: 'userbase' }, ...current.columns.map((el) => { return ({ ...el, table: current.table }) })]) }, []),
         'ALL', 'DISTINCT', 'FROM', 'WHERE', 'GROUP BY', 'HAVING', 'WINDOW',
         'UNION', 'INTERSECT', 'EXCEPT', 'ORDER BY', 'LIMIT', 'OFFSET',
-        'FETCH', 'FOR',
-        ...ALL_DISTINCT,
+        'FETCH', 'FOR','SELECT','WIDTH'
       ]);
   }
 }
@@ -98,14 +73,14 @@ const expression = (word) => {
 
 const Analyzer = (string, data) => {
 
-  let state = 'O';
-  let options = {};
+  let state = 'Start';
 
   let lexem = [];
+
+
   let str = false;
   let dstr = false;
   let cdol = 0;
-
   ( string
     .split(' ') || [])
       .filter((el)=>el!=='')
@@ -154,7 +129,7 @@ const Analyzer = (string, data) => {
                   word=word + el[i];
                   i++;
                 }
-                if (KeyWord.includes(word.toUpperCase())){lexem.push(word)} else (lexem.push('@IDF'));
+                if (KeyWord.includes(word.toUpperCase())){lexem.push(word)} else (lexem.push(word));
               } else 
               if ( /\d/.test(el[i]) || el[i]==='.'){
                 let num = ''
@@ -192,11 +167,30 @@ const Analyzer = (string, data) => {
           }
         });
 
+ 
 
-  console.log('Lexem:: ', lexem)
+  let lex = lexem.slice(-1)[0] || ''
+  let lexs = lexem.slice(0,lexem.length-1)
 
+  lexs.forEach((el)=>{
+    switch(state){
+      case 'Start' :
+        if (el.toUpperCase() === 'SELECT' ) { state = 'Main'}
+        break;
+      default : state='ERROR'
+    }
+  })
 
-  return (FormingResult(state, data, options))
+  console.log('Lex::',lex)  // Сортироем по последней лексеме
+  console.log('Lexem::',lexs) // Возвращаем элемент 
+  console.log('Result::', FormingResult(state,data)
+                            .filter((el)=>{
+                                  if (typeof(el)==='object'){
+                                    return(el.name.toUpperCase().startsWith( lex.toUpperCase()) )
+                                  } else {return(el.toUpperCase().startsWith( lex.toUpperCase()))}
+                                }))
+
+  return (FormingResult(state, data))
 }
 
 export {
