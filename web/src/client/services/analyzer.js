@@ -99,6 +99,7 @@ const Analyzer = (string, data) => {
   let options = {};
 
   let lexem = [];
+  let str = false;
 
   ( string
     .split(' ') || [])
@@ -108,13 +109,25 @@ const Analyzer = (string, data) => {
           else {
             let i = 0;
             while(i < el.length){
+              if ( str && (/\'/.test(el[i]) && !/\\/.test(el[i-1]))  ) {
+                str=false;
+                i++;
+                lexem.push('@STR')
+              } else
+              if ( /\'/.test(el[i]) || ( /[BX]/.test(el[i]) && /\'/.test(el[i+1])) || (/U/.test(el[i]) && /\&/.test(el[i+1]) && /\'/.test(el[i+2])  )   || str ) {
+                str=true;
+                if (/\'/.test(el[i])) {i++} else
+                if (( /[BX]/.test(el[i]) && /\'/.test(el[i+1]))) {i++;i++} else
+                if ((/U/.test(el[i]) && /\&/.test(el[i+1]) && /\'/.test(el[i+2]))) {i++;i++;i++} else
+                i++;
+              } else
               if ( /\w/.test(el[i]) && !(/\d/.test(el[i])) ){
                 let word = ''
                 while ( (/\w/.test(el[i]) || el[i] === '$' || el[i] === '.') && i < el.length ){
                   word=word + el[i];
                   i++;
                 }
-                if (KeyWord.includes(word.toUpperCase())){lexem.push(word)} else (lexem.push('@IDF:::' + word));
+                if (KeyWord.includes(word.toUpperCase())){lexem.push(word)} else (lexem.push('@IDF'));
               } else 
               if ( /\d/.test(el[i]) || el[i]==='.'){
                 let num = ''
@@ -145,7 +158,7 @@ const Analyzer = (string, data) => {
                     i++;
                   }
                 }
-                lexem.push('@NUM::' + num)
+                lexem.push('@NUM')
               }
                else i++;
             }
