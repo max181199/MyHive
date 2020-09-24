@@ -100,6 +100,8 @@ const Analyzer = (string, data) => {
 
   let lexem = [];
   let str = false;
+  let dstr = false;
+  let cdol = 0;
 
   ( string
     .split(' ') || [])
@@ -121,6 +123,20 @@ const Analyzer = (string, data) => {
                 if ((/U/.test(el[i]) && /\&/.test(el[i+1]) && /\'/.test(el[i+2]))) {i++;i++;i++} else
                 i++;
               } else
+              if ( /\$/.test(el[i]) && cdol===3){
+                cdol=0;
+                dstr=false;
+                lexem.push('@DSTR')
+                i++;
+              } else
+              if ( /\$/.test(el[i]) || dstr ){
+                if (/\$/.test(el[i])){
+                  dstr = true;
+                  i++;
+                  cdol++;
+                } else {i++}
+              } 
+              else 
               if ( /\w/.test(el[i]) && !(/\d/.test(el[i])) ){
                 let word = ''
                 while ( (/\w/.test(el[i]) || el[i] === '$' || el[i] === '.') && i < el.length ){
