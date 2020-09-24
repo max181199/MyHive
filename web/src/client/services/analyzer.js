@@ -118,12 +118,32 @@ const Analyzer = (string, data) => {
               } else 
               if ( /\d/.test(el[i]) || el[i]==='.'){
                 let num = ''
+                let stopper = true;
+                let estate = false;
                 if ( el[i] === '.') {num='.';i++;}
                 while( /\d/.test(el[i]) || 
-                          ( !(/\./g.test(num)) && /\./.test(el[i]))  || 
-                              ( num!= '' && !/e/g.test(el[i]) && el[i]==='e' )    ){
-                  num = num+el[i];
-                  i++;
+                          ( !(/\./g.test(num)) && !estate && /\./.test(el[i]))  || 
+                              ( !/e/g.test(num) && /\d/g.test(num) && el[i]==='e' && stopper )){
+                  if ( el[i] === 'e'){
+                    estate=true;
+                    if( i === (el.length-1) ) {stopper=false;}
+                    else 
+                    if ( /\d/.test(el[i+1])   ) {
+                      num = num+el[i] + el[i+1];
+                      i++;i++;
+                    } else
+                    if (/[\+\-]/.test(el[i+1]) ){
+                      if (i === (el.length-2)){stopper=false;} else{
+                        if ( /\d/.test(el[i+2]) ) {
+                          num = num + el[i] + el[i+1] +  el[i+2];
+                          i++;i++;i++
+                        } else {stopper=false;}
+                      }
+                    } else {stopper=false;}
+                  } else {
+                    num = num+el[i];
+                    i++;
+                  }
                 }
                 lexem.push('@NUM::' + num)
               }
