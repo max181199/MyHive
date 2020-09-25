@@ -1,6 +1,8 @@
-import React, {useState, Fragment} from 'react';
+import React, {useState, Fragment, useEffect} from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
+import Cookies from 'universal-cookie';
+import { Divider } from '@material-ui/core';
 
 import { tablesChanged } from './../actions/tables';
 
@@ -19,6 +21,8 @@ import EditIcon from '@material-ui/icons/Edit';
 import AddIcon from '@material-ui/icons/Add';
 
 import Tooltip from '@material-ui/core/Tooltip';
+import { ListSubheader } from '@material-ui/core';
+import { getQuery } from '../services/query-service';
 
 const Root = styled.div`
   width: 100%;
@@ -27,7 +31,7 @@ const Root = styled.div`
 
 const EmptyList = styled(Typography)`
   width: 100%;
-  padding: 5px 25px; 
+  padding: 5px 30px; 
   color: rgba(0, 0, 0, 0.54)
 `;
 
@@ -37,14 +41,25 @@ const Item = styled.div`
 `;
 
 const Settings = styled.div`
-  width: auto;
+  width: calc( 100% - 242px );
   padding: 0px;
-  padding-left : 5px;
-  padding-right : 14px;
+  text-align: center;
 `;
 
 const ListItemBlock = styled(ListItem)`
-  padding: 5px;
+  padding : 0;
+  padding-left: ${props => props.padding || '20px'};
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  cursor: pointer;
+  &:hover {
+    background-color: #e8e8e8;
+  }
+  flex: 1;
+`;
+
+const SETListItemBlock = styled(ListItem)`
+  padding : 0;
+  max-width : 242px;
   padding-left: ${props => props.padding || '20px'};
   transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
   cursor: pointer;
@@ -58,6 +73,21 @@ const StIconButton = styled(IconButton)`
   padding : 0;
 `;
 
+const StListItemBlock = styled(ListItemBlock)`
+  display : block;
+  lineheight : 1;
+`
+
+const Purp = styled.span`
+  color : #9c27b0;
+`;
+
+const Red = styled.span`
+  color : #f44336;
+`;
+
+const cookies = new Cookies();
+
 const TablesList = ({tables, tablesChanged}) => {
   const [menu, onMenuChange] = useState({});
   const setMenu = (name) => {
@@ -67,26 +97,46 @@ const TablesList = ({tables, tablesChanged}) => {
     });
   }
 
+  useEffect(()=>{
+    getDisableName().then((res)=>tablesChanged({...tables,wait : res}))
+    setInterval(()=>{
+      getDisableName().then((res)=>tablesChanged({...tables,wait : res}))
+    },60000)
+  },[])
+
+  useEffect(()=>{
+    cookies.set('login', 'admin', { path: '/' });
+  },[])
+
   const saveCSV = (e) =>{
-    console.log('FILE::',e.target.files[0])
-    sendCSV(e.target.files[0])
+    let file = e.target.files[0]
+    addUpload(file.name).then( (res)=>sendCSV(file,res)) 
   }
 
-  const sendCSV = async ( csv ) => {
+  const addUpload = async (f_name) => {
+    let adr = `${window.location.protocol}//${window.location.host}/api/addColumn?name=${f_name}`
+    let response = await fetch(adr);
+    let result = await response.json();
+    return( result.id )
+  }
 
+  const getDisableName = async () => {
+    let adr = `${window.location.protocol}//${window.location.host}/api/getDisable`
+    let response = await fetch(adr);
+    let result = await response.json();
+    return( result.names )
+  }
+
+  const sendCSV = async ( csv , id ) => {
     const data = new FormData()
-
     data.append( 'csv_file', csv , csv.name ) 
-
+    data.append('id',id)
     let apiBase = `${window.location.protocol}//${window.location.host}/api`
-
     let response = await fetch(apiBase+'/uploadCSV', {
         method: 'POST',
         body: data
     });
-    
     let result = await response.json();
-
     console.log('RESULT:::',result)
 }
 
@@ -129,6 +179,20 @@ const TablesList = ({tables, tablesChanged}) => {
     )
   } 
 
+
+  const renderDisableItem = (item, i) => {
+    return(
+      <Fragment key={`${item.name}_${i}`}>
+        <Item>
+          <StListItemBlock  padding={`20px`}>
+          <ListItemText> {   item.name.length > 21 ? ( 'Имя: ' + item.name.slice(0,21) + '...' ) :('Имя: ' + item.name ) } <br/> {'Состояние: ' + item.state}  </ListItemText>
+          </StListItemBlock>
+        </Item>
+      </Fragment>
+    )
+  } 
+
+
 	return (
     <Root>
       <ListItemBlock padding={`0px`} onClick={() => setMenu('consultant')}>
@@ -137,7 +201,7 @@ const TablesList = ({tables, tablesChanged}) => {
       </ListItemBlock>
       <Collapse in={menu['consultant']} timeout="auto">
       {
-        tables.consultant.map((item,i) => {
+        ( tables.consultant || []).map((item,i) => {
           return renderItem(item,i,'consultant')
         })
       }
@@ -151,7 +215,7 @@ const TablesList = ({tables, tablesChanged}) => {
       </ListItemBlock>
       <Collapse in={menu['userbase']} timeout="auto">
       {
-        tables.userbase.length == 0 ?
+        ( tables.userbase || [] ).length == 0 ?
           <EmptyList>Таблицы отсутствуют</EmptyList> :
         <>
         {
@@ -164,12 +228,12 @@ const TablesList = ({tables, tablesChanged}) => {
       </Collapse>
 
       <Item>
-        <ListItemBlock
+        <SETListItemBlock
           padding={`0px`}
           onClick={() => setMenu('uploaded')}>
           {menu['uploaded'] ? <ExpandLess /> : <ExpandMore />}
           <ListItemText primary="Пользовательские таблицы" />
-        </ListItemBlock>
+        </SETListItemBlock>
         <Settings>
           <input
             accept=".csv"
@@ -190,17 +254,33 @@ const TablesList = ({tables, tablesChanged}) => {
       </Item>
       <Collapse in={menu['uploaded']} timeout="auto">
       {
-        tables.uploaded.length == 0 ?
+        ( tables.uploaded || [] ).length == 0 ?
           <EmptyList>Таблицы отсутствуют</EmptyList> :
         <>
         {
-          tables.uploaded.map((item,i) => {
+          ( tables.uploaded || [] ).map((item,i) => {
             return renderItem(item,i,'uploaded')
           })
         }
         </>
       }
       </Collapse>
+
+      <ListItemBlock padding={`0px`} onClick={() => setMenu('wait')}>
+        {menu['wait'] ? <ExpandLess /> : <ExpandMore />}
+        <ListItemText primary="В обработке" />
+      </ListItemBlock>
+      <Collapse in={menu['wait']} timeout="auto">
+      {
+        ( tables.wait || [] ).length == 0 ?
+        null :
+        ( tables.wait || [] ).map((item,i) => {
+          return renderDisableItem(item,i)
+        })
+      }
+      </Collapse>
+
+
     </Root>
   )
 }

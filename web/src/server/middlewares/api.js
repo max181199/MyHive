@@ -5,6 +5,7 @@ let storage = multer.memoryStorage()
 
 const upload = multer({ storage: storage }).fields([
   { name: 'csv_file', maxCount: 99 },
+  { id: 'id', maxCount: 1 },
 ])
 
 module.exports = function setup(app) {
@@ -15,12 +16,39 @@ module.exports = function setup(app) {
     res.send(mainInfo);
   });
 
+  app.get('/api/addColumn', async(req,res) =>{
+    try{
+      const { rows } = await client2.query(`
+        INSERT INTO smsuploadfileinfo (login, name, encoding, buffer, state) 
+        VALUES ('${req.cookies.login || req.signedCookies.login || 'DEFAULT' }','${req.query.name + '-' + Date.now() }', '', '{}', 'Загрузка')
+        RETURNING id
+      `)
+      res.send({status : 'ok', id : rows[0].id })
+    } catch(err){
+      res.send({status : 'error', error : err})
+    }
+  });
+
+  app.get('/api/getDisable',async(req,res) =>{
+    try{
+      const { rows } = await client2.query(`
+        SELECT name, state FROM smsuploadfileinfo WHERE state != 'ok' AND login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}'
+      `)
+      res.send({status : 'ok', names : rows })
+    } catch(err){
+      res.send({status : 'error', error : err})
+    }
+  })
+
   app.post('/api/uploadCSV', upload, async (req, res) => {
-    const { rows } = await client2.query(`
-      INSERT INTO smsuploadfileinfo (login, name, encoding, buffer, state) 
-      VALUES ('TEST', '', '', '{1,2,3}', 'Loading to Hive'); 
-    `)
-    res.send({ status: 'EXCELLENT', fls: req.files[0],rows:rows });
+    try{
+      const { rows } = await client2.query(`
+        UPDATE smsuploadfileinfo SET encoding='7bit', state='Отправка Hive' WHERE id == '${req.body.id}'
+      `)
+      res.send({ status: 'ok', name : req.files[0]});
+    } catch(err){
+      res.send({status : 'error', error : err})
+    }
   });
 
   app.get('/api/updateConsultantTable', async (req, res) => {

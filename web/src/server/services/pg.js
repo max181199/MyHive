@@ -12,7 +12,7 @@ const client = new Pool({
 const client2 = new Pool({
   host: 'localhost',
   port: 5432,
-  database: 'sms',
+  database: 'postgres',
   user: 'postgres',
   password: 'postgres'
 });

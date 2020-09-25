@@ -84,7 +84,7 @@ const Main = ({ tablesChanged }) => {
   useEffect(() => {
     (async() => {
       const tables = await getQuery({url: '/getMainInfo'});
-      tablesChanged(tables);
+      tablesChanged({...tables,wait : []});
       setLoading(false);
     })()
   }, []);

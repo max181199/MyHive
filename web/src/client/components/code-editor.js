@@ -36,7 +36,7 @@ const CodeEditor = ({ tables }) => {
       value: 'consultant',
       meta: ''
     }];
-    for (const key in tables) {
+    for (let key ; key < (tables.length ) ; key++) {
       tables[key].map((table) => {
         wordList.push({
           caption: table.table,

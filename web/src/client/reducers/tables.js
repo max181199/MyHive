@@ -2,7 +2,8 @@ const defaultState = () => {
   return {
     consultant: [],
     userbase: [],
-    uploaded: []
+    uploaded: [],
+    wait : []
   };
 };
 
