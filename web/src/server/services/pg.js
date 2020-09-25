@@ -9,6 +9,13 @@ const client = new Pool({
   user: 'postgres',
   password: 'postgres'
 });
+const client2 = new Pool({
+  host: 'localhost',
+  port: 5432,
+  database: 'sms',
+  user: 'postgres',
+  password: 'postgres'
+});
 
 const queryPg = async (res, query) => {
   try {
@@ -22,8 +29,22 @@ const queryPg = async (res, query) => {
     });
   }
 }
+const queryPg2 = async (res, query) => {
+  try {
+    const { rows } = await client2.query(query);
+    return rows;
+  } catch (e) {
+    res.status(500).send(`Postgres error: ${e.message}`);
+    throw new PostgresError({
+      message: e.message,
+      query: S(query).decodeHTMLEntities().collapseWhitespace().s
+    });
+  }
+}
 
 module.exports = {
     client,
-    queryPg
+    client2,
+    queryPg,
+    queryPg2,
 };

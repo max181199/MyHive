@@ -16,6 +16,13 @@ let theme = createMuiTheme({
     primary: {
       main: '#1976d2'
     }
+  },
+  overrides: {
+    MuiTooltip : {
+      tooltip : {
+        fontSize : '16px'
+      }
+    },
   }
 });
 

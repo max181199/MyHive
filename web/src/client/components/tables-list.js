@@ -38,7 +38,9 @@ const Item = styled.div`
 
 const Settings = styled.div`
   width: auto;
-  padding: 0 10px;
+  padding: 0px;
+  padding-left : 5px;
+  padding-right : 14px;
 `;
 
 const ListItemBlock = styled(ListItem)`
@@ -52,6 +54,10 @@ const ListItemBlock = styled(ListItem)`
   flex: 1;
 `;
 
+const StIconButton = styled(IconButton)`
+  padding : 0;
+`;
+
 const TablesList = ({tables, tablesChanged}) => {
   const [menu, onMenuChange] = useState({});
   const setMenu = (name) => {
@@ -60,6 +66,29 @@ const TablesList = ({tables, tablesChanged}) => {
       [name]: (menu[name] == undefined) ? true : !menu[name] 
     });
   }
+
+  const saveCSV = (e) =>{
+    console.log('FILE::',e.target.files[0])
+    sendCSV(e.target.files[0])
+  }
+
+  const sendCSV = async ( csv ) => {
+
+    const data = new FormData()
+
+    data.append( 'csv_file', csv , csv.name ) 
+
+    let apiBase = `${window.location.protocol}//${window.location.host}/api`
+
+    let response = await fetch(apiBase+'/uploadCSV', {
+        method: 'POST',
+        body: data
+    });
+    
+    let result = await response.json();
+
+    console.log('RESULT:::',result)
+}
 
   const renderItem = (item, i, name) => {
     return(
@@ -142,11 +171,21 @@ const TablesList = ({tables, tablesChanged}) => {
           <ListItemText primary="Пользовательские таблицы" />
         </ListItemBlock>
         <Settings>
-          <Tooltip title="Добавить таблицу">
-            <IconButton size="small">
-              <AddIcon />
-            </IconButton>
-          </Tooltip>
+          <input
+            accept=".csv"
+            style={{ display: 'none' }}
+            id="fileLoader"
+            multiple={false}
+            type="file"
+            onChange={saveCSV}
+          />
+          <label htmlFor="fileLoader">
+            <Tooltip title="Добавить таблицу">
+              <StIconButton component= 'span' size="small">
+                <AddIcon/>
+              </StIconButton>
+            </Tooltip>
+          </label> 
         </Settings> 
       </Item>
       <Collapse in={menu['uploaded']} timeout="auto">

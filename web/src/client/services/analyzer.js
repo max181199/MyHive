@@ -40,6 +40,20 @@ const FormingResult = (state, data) => {
       return O;
     case 'Start':
       return ['WIDTH','SELECT']
+    case 'AD' :
+      return([
+        'ON','FROM','WHERE','GROUP BY','HAVING','WINDOW',
+        'UNION','INTERSECT','EXCEPT','ORDER BY','LIMIT','OFFSET','FETCH',
+        'FOR',
+        ...FormingResult('ColumnName',data)
+      ])
+    case 'Main' : 
+      return([
+        'ALL','DISTINCT','FROM','WHERE','GROUP BY','HAVING','WINDOW',
+        'UNION','INTERSECT','EXCEPT','ORDER BY','LIMIT','OFFSET','FETCH',
+        'FOR',
+        ...FormingResult('ColumnName',data)
+      ])
     case 'TableName':
       return ([
         ...data.consultant.reduce((ar, current) => { return ([...ar, { name: current.table, scheme: 'consultant' }]) }, []),
@@ -74,9 +88,8 @@ const expression = (word) => {
 const Analyzer = (string, data) => {
 
   let state = 'Start';
-
   let lexem = [];
-
+  let lastSymbol = string.slice(-1);
 
   let str = false;
   let dstr = false;
@@ -85,6 +98,7 @@ const Analyzer = (string, data) => {
     .split(' ') || [])
       .filter((el)=>el!=='')
         .forEach((el)=> {
+          console.log('!!!!',el)
           if (KeyWord.includes(el.toUpperCase())){lexem.push(el)}
           else {
             let i = 0;
@@ -167,28 +181,45 @@ const Analyzer = (string, data) => {
           }
         });
 
- 
+  let lex; 
+  let lexs;
 
-  let lex = lexem.slice(-1)[0] || ''
-  let lexs = lexem.slice(0,lexem.length-1)
+  if (lastSymbol === ' '){
+    lex = ''
+    lexs = lexem
+  } else  {
+    lex = lexem.slice(-1)[0] || ''
+    lexs = lexem.slice(0,lexem.length-1)
+  }   
+
 
   lexs.forEach((el)=>{
     switch(state){
       case 'Start' :
-        if (el.toUpperCase() === 'SELECT' ) { state = 'Main'}
+        if (el.toUpperCase() === 'SELECT' ) { state = 'Main'} else {state='ERROR'}
+        break;
+      case 'Main' :
+        if (el.toUpperCase() === 'ALL' || el.toUpperCase() === 'DISTINCT' ) { state = 'AD'} else
+        { state = 'ERROR' }
+        break;
+      case 'AD' :
+        
+        break;
+      case 'EXPR' :
+        
         break;
       default : state='ERROR'
     }
   })
 
-  console.log('Lex::',lex)  // Сортироем по последней лексеме
-  console.log('Lexem::',lexs) // Возвращаем элемент 
-  console.log('Result::', FormingResult(state,data)
-                            .filter((el)=>{
-                                  if (typeof(el)==='object'){
-                                    return(el.name.toUpperCase().startsWith( lex.toUpperCase()) )
-                                  } else {return(el.toUpperCase().startsWith( lex.toUpperCase()))}
-                                }))
+  // console.log('Lex::',lex)  // Сортироем по последней лексеме
+  // console.log('Lexem::',lexs) // Возвращаем элемент 
+  // console.log('Result::', FormingResult(state,data)
+  //                           .filter((el)=>{
+  //                                 if (typeof(el)==='object'){
+  //                                   return(el.name.toUpperCase().startsWith( lex.toUpperCase()) )
+  //                                 } else {return(el.toUpperCase().startsWith( lex.toUpperCase()))}
+  //                               }))
 
   return (FormingResult(state, data))
 }
