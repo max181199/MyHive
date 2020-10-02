@@ -17,8 +17,23 @@ const axiosGet = async (res, url) => {
   }
 }
 
+const axiosPost = async (res, url , body) => {
+  try{
+    const res = await axios.post(encodeURI(url),body);
+    return await res.data;
+  } catch(e){
+    res.status(500).send(`Axios error: ${e.message}`);
+    throw new AxiosError({
+      message: e.message,
+      url: url
+    });
+  }
+
+}
+
 
 module.exports = {
   instance,
-  axiosGet
+  axiosGet,
+  axiosPost,
 };

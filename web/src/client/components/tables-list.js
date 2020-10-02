@@ -31,7 +31,7 @@ const Root = styled.div`
 
 const EmptyList = styled(Typography)`
   width: 100%;
-  padding: 5px 30px; 
+  padding: 5px 20px; 
   color: rgba(0, 0, 0, 0.54)
 `;
 
@@ -43,6 +43,7 @@ const Item = styled.div`
 const Settings = styled.div`
   width: calc( 100% - 242px );
   padding: 0px;
+  display : flex;
   text-align: center;
 `;
 
@@ -110,7 +111,7 @@ const TablesList = ({tables, tablesChanged}) => {
 
   const saveCSV = (e) =>{
     let file = e.target.files[0]
-    addUpload(file.name).then( (res)=>sendCSV(file,res)) 
+    addUpload(file.name).then( (res)=>{sendCSV(file,res)} ) 
   }
 
   const addUpload = async (f_name) => {
@@ -137,16 +138,16 @@ const TablesList = ({tables, tablesChanged}) => {
         body: data
     });
     let result = await response.json();
-    console.log('RESULT:::',result)
+    console.log('RESULT__:::',result)
 }
 
   const renderItem = (item, i, name) => {
     return(
       <Fragment key={`${item.table}_${i}`}>
         <Item>
-          <ListItemBlock padding={`30px`} onClick={() => setMenu(item.table)}>
+          <ListItemBlock padding={`20px`} onClick={() => setMenu(item.table)}>
             {menu[item.table] ? <ExpandLess /> : <ExpandMore />}
-            <ListItemText primary={item.table} />
+            <ListItemText primary={item.table.length > 21 ? (item.table.slice(0,18)+'...') : item.table } />
           </ListItemBlock>
           {
             (name != 'consultant') ?
