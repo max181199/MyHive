@@ -47,7 +47,7 @@ const HelpPage = () => {
             <Header page='helpPage'/>
             <Background>
                 <Content>
-                    <p>Content</p>
+                    <p>Content==</p>
                 </Content>
                 <Papper>
                     <p>Papper</p>
@@ -56,5 +56,6 @@ const HelpPage = () => {
         </Root>
     )
 }
+
 
 export default HelpPage
