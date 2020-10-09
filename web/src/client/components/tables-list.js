@@ -42,6 +42,15 @@ const Item = styled.div`
 
 const Settings = styled.div`
   width: calc( 100% - 242px );
+  justify-content: center;
+  padding: 0px;
+  display : flex;
+  text-align: center;
+`;
+
+const SettingsOne = styled.div`
+  width: calc( 100% - 232px );
+  justify-content: center;
   padding: 0px;
   display : flex;
   text-align: center;
@@ -76,16 +85,13 @@ const StIconButton = styled(IconButton)`
 
 const StListItemBlock = styled(ListItemBlock)`
   display : block;
-  lineheight : 1;
+  & > div{
+    & > span{
+      line-height : 1.4;
+      padding: 4px 0px;
+    }
+  }
 `
-
-const Purp = styled.span`
-  color : #9c27b0;
-`;
-
-const Red = styled.span`
-  color : #f44336;
-`;
 
 const cookies = new Cookies();
 
@@ -151,7 +157,7 @@ const TablesList = ({tables, tablesChanged}) => {
           </ListItemBlock>
           {
             (name != 'consultant') ?
-            <Settings>
+            <SettingsOne>
               <Tooltip title="Переименовать">
                 <IconButton size="small">
                   <EditIcon />
@@ -162,14 +168,14 @@ const TablesList = ({tables, tablesChanged}) => {
                   <DeleteOutlineIcon />
                 </IconButton>
               </Tooltip>
-            </Settings> : null
+            </SettingsOne> : null
           }
         </Item>
         <Collapse in={menu[item.table]} timeout="auto">
         {
           item.columns.map((column, k) => {
             return(
-              <ListItemBlock key={`${i}_${k}`} padding={`60px`}>
+              <ListItemBlock key={`${i}_${k}`} padding={`40px`}>
                 <ListItemText primary={`${column.name} (${column.type})`} />
               </ListItemBlock>
             )

@@ -23,6 +23,11 @@ let theme = createMuiTheme({
         fontSize : '16px'
       }
     },
+  },
+  props: {
+    MuiTooltip : {
+      arrow : true
+    }
   }
 });
 

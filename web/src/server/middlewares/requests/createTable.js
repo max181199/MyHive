@@ -1,9 +1,7 @@
-const createTable = async ( name , column ) => {
-  const { axiosPost } = require('./../../services/axios');
-  const { queryPg } = require('./../../services/pg');
-  const moment = require('moment');
+const createTable = async ( name , column , req , res ) => {
+  const { axiosGet } = require('./../../services/axios');
 
-  const createTable = 
+  let createTable = 
     `CREATE EXTERNAL TABLE IF NOT EXISTS userbase_subd_fedyashkinma.${name}
      (${
        column
@@ -12,7 +10,12 @@ const createTable = async ( name , column ) => {
       FIELDS TERMINATED BY '\\t'
       STORED AS TEXTFILE  
     `
-  return createTable;
+  const { databases } = await axiosGet(res, `http://10.106.79.70:50111/templeton/v1/ddl/database?user.name=admin`);
+  
+  for (let i = 0; i < databases.length; i++) {
+    console.log(`${i+1} из ${databases.length} (${databases[i]})`);}
+
+  return {createTable};
 
 }
 

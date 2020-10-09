@@ -3,6 +3,11 @@ import { Typography } from '@material-ui/core';
 import styled from 'styled-components';
 
 import logoImg from './../images/logo.png'
+import LiveHelpIcon from '@material-ui/icons/LiveHelp';
+import { IconButton } from '@material-ui/core';
+import Tooltip from '@material-ui/core/Tooltip';
+import { Link } from '@material-ui/core';
+import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
 
 const Root = styled.header`
   display: flex;
@@ -15,6 +20,14 @@ const Root = styled.header`
   color: #fff;
   position: relative;
 `;
+
+const Help = styled.div`
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  position: absolute;
+  right: 30px;
+`
 
 const Name = styled.div`
   display: flex;
@@ -35,20 +48,87 @@ const Logo = styled.div`
 
 const FullName = styled(Typography)`
   font-size: 20px;
-  border-left: 1px solid white;
+  border-left: 2px solid white;
   padding: 10px 5px;
   font-weight: bold;
   line-height: 12px;
   margin-left: 5px;
 `;
 
+const BoldText = styled(Typography)`
+  font-size: 20px;
+  padding: 10px 5px;
+  font-weight: bold;
+  line-height: 12px;
+`
+const StLink = styled(Link)`
+  color : white;
+  display: flex;
+  align-items: center;
+  : hover{
+    text-decoration: none;
+    & > svg {
+      color : white;
+    }
+  }
+  & > svg {
+    padding : 0;
+    color : #1976d2;
+    font-weight: bold;
+    margin-right : -8px;
+    width: 25px;
+    height: 25px;
+  }
+`
+
+const StIconButton = styled(IconButton)`
+  color:white;
+  padding : 8px;
+  & > span{
+    & > svg {
+      height : 25px;
+      width  : 25px;
+    }
+  }
+`;
+
 const Header = ({ page }) => {
   return (
     <Root>
-      <Name>
-        <Logo></Logo>
-        <FullName>Hive Manager</FullName>
-      </Name>
+      {
+        page === 'main'
+        ?
+        [
+          <Name key='main_name'>
+            <Logo></Logo>
+            <FullName>Hive Manager</FullName>
+          </Name>
+          ,
+          <Help key='main_help'>
+            <Tooltip title="Помощь">
+              <StIconButton href='help'>
+                <LiveHelpIcon/>
+              </StIconButton>
+            </Tooltip>
+          </Help>
+        ]
+        :
+        null
+      }
+      {
+        page === 'helpPage'
+        ?
+        <Name id='helpPage_name'>
+          <StLink href={`${window.location.protocol}//${window.location.host}`}>
+            <ArrowBackIosIcon/>
+            <BoldText>
+              Вернуться
+            </BoldText>
+          </StLink>
+        </Name>
+        :
+        null
+      }
     </Root>
   );
 };

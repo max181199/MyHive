@@ -44,9 +44,12 @@ module.exports = function setup(app) {
     try{
 
       let tmp = req.files['csv_file'][0].buffer.toString('utf8');
+      let header = tmp.match(/.*?\n/)[0].slice(0,tmp.match(/.*?\n/)[0].length -1).split(',')
+        .reduce((pr,el)=>(pr+el+','),'')
+      header = header.slice(0,header.length-1)
 
       const { rows : rw1 } = await client2.query(`
-        UPDATE smsuploadfileinfo SET encoding='utf8', buffer='${tmp}', state = 'Создаем Hive таблицу' WHERE id = ${req.body.id};
+        UPDATE smsuploadfileinfo SET encoding='utf8',buffer='${tmp}', state = 'Создаем Hive таблицу' WHERE id = ${req.body.id};
       `)
 
       const { rows } = await client2.query(`
@@ -55,14 +58,14 @@ module.exports = function setup(app) {
 
       ///Start --> Создаем таблицу в Hive
         const createTable = require('./requests/createTable');
-        // let res = await createTable(rows[0].name,tmp.match(/\n/));
+        let result = await createTable(rows[0].name,header,req,res);
         let { rows: rw2 } = await client2.query(`
           UPDATE smsuploadfileinfo SET state = 'Заполнем таблицу' WHERE id = ${req.body.id};
         `)
       ///End  --> Создаем таблицу в Hive
       
 
-      res.send({ status: 'ok' , smt : rows , res : tmp.match(/.*?\n/) });
+      res.send({ status: 'ok' , res : result , header : header });
     } catch(err){
       res.send({status : 'error', place : 'uploadCSV', error : err})
     }
