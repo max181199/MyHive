@@ -8,6 +8,7 @@ import { IconButton } from '@material-ui/core';
 import Tooltip from '@material-ui/core/Tooltip';
 import { Link } from '@material-ui/core';
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
+import TocIcon from '@material-ui/icons/Toc';
 
 const Root = styled.header`
   display: flex;
@@ -92,7 +93,16 @@ const StIconButton = styled(IconButton)`
   }
 `;
 
-const Header = ({ page }) => {
+const StIconButtonContent = styled(IconButton)`
+  color:white;
+  padding : 4px;
+  margin-left : 10px;
+  font-size : 28px;
+`;
+
+const Header = ({ page,state,cb}) => {
+
+  
   return (
     <Root>
       {
@@ -118,16 +128,24 @@ const Header = ({ page }) => {
       {
         page === 'helpPage'
         ?
-        <Name id='helpPage_name'>
+        <Name key='helpPage_name'>
           <StLink href={`${window.location.protocol}//${window.location.host}`}>
             <ArrowBackIosIcon/>
             <BoldText>
               Вернуться
             </BoldText>
           </StLink>
+          {
+            state
+            ?
+            null
+            : 
+            <StIconButtonContent onClick={()=>{cb(true)}}>
+              <TocIcon fontSize='inherit'/>
+            </StIconButtonContent>
+          }
         </Name>
-        :
-        null
+        : null
       }
     </Root>
   );

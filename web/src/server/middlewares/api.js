@@ -59,13 +59,14 @@ module.exports = function setup(app) {
       ///Start --> Создаем таблицу в Hive
         const createTable = require('./requests/createTable');
         let result = await createTable(rows[0].name,header,req,res);
-        let { rows: rw2 } = await client2.query(`
-          UPDATE smsuploadfileinfo SET state = 'Заполнем таблицу' WHERE id = ${req.body.id};
-        `)
+        console.log(`CREATING_TABLE  ${rows[0].name}  DONE`)
       ///End  --> Создаем таблицу в Hive
-      
+        
+        let { rows: rw2 } = await client2.query(`
+        UPDATE smsuploadfileinfo SET state = 'Заполнем таблицу' WHERE id = ${req.body.id};
+        `)
 
-      res.send({ status: 'ok' , res : result , header : header });
+      res.send({ status: 'ok' , res : result  });
     } catch(err){
       res.send({status : 'error', place : 'uploadCSV', error : err})
     }

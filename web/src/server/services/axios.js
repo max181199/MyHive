@@ -6,6 +6,7 @@ const instance = axios.create({
 
 const axiosGet = async (res, url) => {
   try {
+    url = url.replace(/.+?\//i,'http://dad-proxy.consultant.ru')
     const res = await instance.get(encodeURI(url));
     return await res.data;
   } catch (e) {
@@ -19,7 +20,10 @@ const axiosGet = async (res, url) => {
 
 const axiosPost = async (res, url , body) => {
   try{
+    url = url.replace(/.+?\//i,'http://dad-proxy.consultant.ru')
+    console.log('BEFORE::',encodeURI(url),body)
     const res = await axios.post(encodeURI(url),body);
+    console.log('AFTER::',url,body)
     return await res.data;
   } catch(e){
     res.status(500).send(`Axios error: ${e.message}`);
