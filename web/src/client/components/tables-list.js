@@ -93,6 +93,12 @@ const StListItemBlock = styled(ListItemBlock)`
   }
 `
 
+const StSpan = styled.span`
+  color : grey;
+  font-size : 14px;
+  padding-left : 10px;
+`;
+
 const cookies = new Cookies();
 
 const TablesList = ({tables, tablesChanged}) => {
@@ -124,7 +130,7 @@ const TablesList = ({tables, tablesChanged}) => {
     let adr = `${window.location.protocol}//${window.location.host}/api/addColumn?name=${f_name}`
     let response = await fetch(adr);
     let result = await response.json();
-    return( result.id )
+    return( { id : result.id, name : result.name } )
   }
 
   const getDisableName = async () => {
@@ -134,10 +140,10 @@ const TablesList = ({tables, tablesChanged}) => {
     return( result.names )
   }
 
-  const sendCSV = async ( csv , id ) => {
+  const sendCSV = async ( csv , obj ) => {
     const data = new FormData()
-    data.append( 'csv_file', csv , csv.name ) 
-    data.append('id',id)
+    data.append( 'csv_file', csv , obj.name ) 
+    data.append('id',obj.id)
     let apiBase = `${window.location.protocol}//${window.location.host}/api`
     let response = await fetch(apiBase+'/uploadCSV', {
         method: 'POST',
@@ -192,7 +198,21 @@ const TablesList = ({tables, tablesChanged}) => {
       <Fragment key={`${item.name}_${i}`}>
         <Item>
           <StListItemBlock  padding={`20px`}>
-          <ListItemText> {   item.name.length > 21 ? ( 'Имя: ' + item.name.slice(0,21) + '...' ) :('Имя: ' + item.name ) } <br/> {'Состояние: ' + item.state}  </ListItemText>
+            <ListItemText> 
+              {   
+                item.name.length > 21 
+                ? 
+                ( 'Имя: ' + item.name.slice(0,21) + '...' ) 
+                :
+                ('Имя: ' + item.name ) 
+              } 
+              <br/>
+              <StSpan>
+                {
+                  item.state
+                }
+              </StSpan>
+            </ListItemText>
           </StListItemBlock>
         </Item>
       </Fragment>
