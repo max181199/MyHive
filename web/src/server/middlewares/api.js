@@ -1,16 +1,11 @@
 const fs = require('fs');
 const multer = require('multer');
 const { client2 } = require('../services/pg');
-const { promisify } = require('util')
+const { promisify } = require('util');
+const createTable = require('./requests/createTable');
 const unlinkAsync = promisify(fs.unlink)
 
-var WebHDFS = require('webhdfs');
-const { Stream } = require('stream');
-var hdfs = WebHDFS.createClient({
-  user: 'administrator',
-  host: 'dad-proxy.consultant.ru/hadoop-manager1.consultant.ru',
-  port: 50070,
-});
+
 
 let storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -60,62 +55,33 @@ module.exports = function setup(app) {
 
   app.post('/api/uploadCSV', upload, async (req, res) => {
     try{
-
-      // Подготавливаем данные
-
+      // Имя файла
       const { rows } = await client2.query(`
         SELECT name FROM smsuploadfileinfo WHERE id = ${req.body.id}`)
       let name = rows[0].name;
-      let header = {};
- 
-      hdfs.mkdir('/user/admin/tmp/hive_upload_table',(error)=>{if (error !== null){console.log('HTFS_MKDIR_ERROR_CB:::',error)}})
-      
-      let stream = fs.createReadStream(req.files['csv_file'][0].path,{encoding: 'utf8'})
-      
-      let header_tmp = ''
-      stream
-        .on('open',()=>{})
-        .on('readable',function(){
-          let char = stream.read(1)
-          while ( char !== '\n') {
-            header_tmp+=char;
-            char = stream.read(1)
-          } 
-          stream.close()
-        })
-        .on('close',()=>{
-          header_tmp.split(',').forEach((el)=>{
-            let el_tmp = el.replace(/ /g,'')
-            if ( /\:/g.test(el_tmp)){
-              let ar = el_tmp.split(':')
-              header[ar[0]] = ar[1]
-            } else {
-              header[el_tmp] = 'TEXT'
-            }
-          })
-          console.log('HEADER::',header)
-        })
-
-      
-
-      //let remoteFileStream = hdfs.createWriteStream('/user/admin/tmp/hive_upload_table/' + name + '.csv');
-      
-
-      ///Start --> Создаем таблицу в Hive
-        // const { rows : rw1 } = await client2.query(`
-        //   UPDATE smsuploadfileinfo SET encoding='utf8',buffer='${tmp}', state = 'Создаем Hive таблицу' WHERE id = ${req.body.id};
-        // `)
-        //const createTable = require('./requests/createTable');
-        //let result = await createTable(rows[0].name,header,req,res);
-        //console.log(`CREATING_TABLE  ${rows[0].name}  DONE`)
-      ///End  --> Создаем таблицу в Hive
-
-
-      
+      // Заголовок для создания таблицы
+      await client2.query(`
+        UPDATE smsuploadfileinfo SET state = 'Анализируем заголовок' WHERE id = ${req.body.id};`)
+      let  { getHeader } = require('../services/header')
+      let header = await getHeader(req.files['csv_file'][0].path)
+      // Копируем файл на сервер hadoop
+      await client2.query(`
+        UPDATE smsuploadfileinfo SET state = 'Передаем данные на сервер' WHERE id = ${req.body.id};`)
+      let { copyToHDFS } = require('../services/copyToHDFS')
+      let result = await copyToHDFS(req.files['csv_file'][0].path,header.offset,name)
+      console.log('RESULT:::',result)
+      // Проверяем на наличие схемы
+      await client2.query(`
+        UPDATE smsuploadfileinfo SET state = 'Проверяем наличие БД' WHERE id = ${req.body.id};`)
+      let { createDatabase } = require('./requests/createDatabase')  
+      let databaseName = await createDatabase(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',req,res)
+      console.log('DATABASE_NAME:::',databaseName)
+      //Удаляем файл на устройстве
       await unlinkAsync(req.files['csv_file'][0].path)
+      //Архивируем запись о загруженных таблицах
       const { rows : rw1 } = await client2.query(`
         UPDATE smsuploadfileinfo SET state = 'ok' WHERE id = ${req.body.id};`)
-        
+      //Возвращаем ответ 
       res.send({ status: 'ok',name  });
     } catch(err){
       res.send({status : 'error', place : 'uploadCSV', error : err})

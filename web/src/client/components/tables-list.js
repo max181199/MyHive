@@ -118,7 +118,7 @@ const TablesList = ({tables, tablesChanged}) => {
   },[])
 
   useEffect(()=>{
-    cookies.set('login', 'admin', { path: '/' });
+    cookies.set('login', 'test_user', { path: '/' });
   },[])
 
   const saveCSV = (e) =>{
