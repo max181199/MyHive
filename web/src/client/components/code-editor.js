@@ -26,9 +26,8 @@ const Settings = styled.div`
 `;
 
 
-const CodeEditor = ({ tables }) => {
+const CodeEditor = ({ tables , request , setRequest, send_request}) => {
   const editor = useRef(null);
-  const [value, setValue] = useState('');
 
   useEffect(() => {
     let wordList = [{
@@ -67,11 +66,11 @@ const CodeEditor = ({ tables }) => {
     <Root>
       <Settings>
         <Tooltip title="Выполнить">
-          <IconButton size="small">
+          <IconButton size="small" onClick={()=>{send_request()}}>
             <PlayCircleOutlineIcon />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Очистить">
+        <Tooltip title="Очистить" onClick={()=>{setRequest('')}}>
           <IconButton size="small">
             <HighlightOffIcon />
           </IconButton>
@@ -83,14 +82,14 @@ const CodeEditor = ({ tables }) => {
         mode="mysql"
         theme="xcode"
         name="blah2"
-        onChange={(value) =>{Analyzer(value,tables);setValue(value)}}
+        onChange={(value) =>{setRequest(value)}}
         fontSize={16}
         width="100%"
         height="calc(100% - 45px)"
         showPrintMargin={true}
         showGutter={true}
         highlightActiveLine={true}
-        value={value}
+        value={request}
         setOptions={{
           enableLiveAutocompletion: false,
           enableSnippets: false,

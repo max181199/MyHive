@@ -18,12 +18,46 @@ const axiosGet = async (res, url) => {
   }
 }
 
+const _axiosGet = async (res, url) => {
+  try {
+    url = url.replace(/.+?\//i,'http://dad-proxy.consultant.ru')
+    const res = await instance.get(encodeURI(url));
+    return await res.data;
+  } catch (e) {
+    throw new AxiosError({
+      message: e.message,
+      url: url
+    });
+  }
+}
+
+const _axiosDelete = async (res, url) => {
+  try {
+    url = url.replace(/.+?\//i,'http://dad-proxy.consultant.ru')
+    const res = await axios.delete(encodeURI(url));
+    return await res.data;
+  } catch (e) {
+    throw new AxiosError({
+      message: e.message,
+      url: url
+    });
+  }
+}
+
+
+const axiosPut = async (url) => {
+    const res = await axios.put(encodeURI(url));
+    return await res.data;
+}
+
 const axiosPost = async (res, url , body) => {
   try{
     url = url.replace(/.+?\//i,'http://dad-proxy.consultant.ru')
-    console.log('BEFORE::',encodeURI(url),body)
-    const res = await axios.post(encodeURI(url),body);
-    console.log('AFTER::',url,body)
+    const res = await axios.post(encodeURI(url),body,{
+      headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+      }
+    });
     return await res.data;
   } catch(e){
     res.status(500).send(`Axios error: ${e.message}`);
@@ -32,7 +66,26 @@ const axiosPost = async (res, url , body) => {
       url: url
     });
   }
+}
 
+const _axiosPost = async (res, url , body) => {
+  try{
+    url = url.replace(/.+?\//i,'http://dad-proxy.consultant.ru')
+    const res = await axios.post(
+      encodeURI(url),body,
+      {
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+      }
+      );
+    return await res.data;
+  } catch(e){
+    throw new AxiosError({
+      message: e.message,
+      url: url
+    });
+  }
 }
 
 
@@ -40,4 +93,8 @@ module.exports = {
   instance,
   axiosGet,
   axiosPost,
+  axiosPut,
+  _axiosPost,
+  _axiosGet,
+  _axiosDelete,
 };

@@ -13,7 +13,7 @@ const hiveRequest = async (req) => {
               );
               client.connect(
                 {
-                  host: 'dad-proxy.consultant.ru/hadoop-manager1.consultant.ru',
+                  host: '10.106.79.70',
                   port: 10000,
                 },
                 new hive.connections.TcpConnection(),
@@ -23,10 +23,10 @@ const hiveRequest = async (req) => {
                 })
               ).then(async client => {
                 const session = await client.openSession({
-                  client_protocol: TCLIService_types.TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V7
+                  client_protocol: TCLIService_types.TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V5
                 });
 
-                console.log({req})
+                console.log("REQ:::",req)
 
                 const operation = await session.executeStatement(
                   req,

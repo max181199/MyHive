@@ -1,36 +1,38 @@
-const copyToHDFS = (path,file_offset,name)=>{
+const copyToHDFS = (path,file_offset,name,res)=>{
     return(
         new Promise(function (resolve, reject) {
           try {
             const fs = require('fs');
-            let WebHDFS = require('webhdfs');
-            let hdfs = WebHDFS.createClient({
-                user: 'admin',
-                host: 'dad-proxy.consultant.ru/hadoop-manager1.consultant.ru',
-                port: 50070,
-            });
+            const { axiosPut,axiosPost } = require('../services/axios')
             // Создаем папку в hdfs
-            hdfs.mkdir('/user/admin/test/hive_upload_table',(error)=>{
-              if (error !== null){
-                console.log('HTFS_MKDIR_ERROR:::',error)
-                reject({
-                  'error' : err,
-                  'place' : 'COPY_TO_HDFS_MKDIR'
-                })
-              }
+            axiosPut('http://hadoop-manager1.consultant.ru:50070/webhdfs/v1/tmp/hive_upload_table?op=MKDIRS&user=admin')
+            .then( (data)=>{
+              console.log('HDFS_MKDIR_RESULT:::', JSON.stringify(data,null,2))
             })
-            // Тестовое создание файла в hdfs
-            // hdfs.writeFile('/user/admin/test/hive_upload_table/' + name + '.csv', 'TestInfo', (error)=> {
-            //   console.log('HTFS_WRITEFILE_ERROR:::',error)
-            //     reject({
-            //       'error' : error,
-            //       'place' : 'HTFS_WRITEFILE_ERROR'
-            //     })
-            // });
+            .catch( (err)=>{
+              console.log('HDFS_MKDIR_ERROR:::',err)
+              resolve({
+                status : 'error',
+                'place' : 'HDFS_MKDIR'
+              })
+            })
+            // Запрашиваем адреc dataNode hdfs для отправки данных
+            axiosPut(`http://dad-proxy.consultant.ru/hadoop-manager1.consultant.ru:50070/webhdfs/v1/tmp/hive_upload_table/${name}.csv?op=CREATE&overwrite=true`)
+            .then( (data)=>{
+              console.log('HDFS_DATANODE_RESULT:::', JSON.stringify(data,null,2))
+              resolve({
+                status : 'ok'
+              })
+            })
+            .catch( (err)=>{
+              console.log('HDFS_DATANODE_ERROR:::',err)
+              resolve({
+                status : 'error',
+                'place' : 'HDFS_DATANODE'
+              })
+            })
 
-            resolve({
-              status : 'ok'
-            })
+
             // Создаем файл и переносим в него данные ( Отбрасываем заголовок )
             // Файл для записи
             // let remoteFileStream = hdfs.createWriteStream('/user/admin/test/hive_upload_table/' + name ,{ encoding: 'utf8'})

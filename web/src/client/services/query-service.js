@@ -1,6 +1,8 @@
-const getQuery = async ({apiBase = `${window.location.protocol}//${window.location.host}/api`, url='', params = {}}) => {
-  let paramsForQuery = '';
+const getQuery = async ( url='', params = {}) => {
 
+  const apiBase = `${window.location.protocol}//${window.location.host}/api`
+  
+  let paramsForQuery = '';
   for (let prop in params) {
     paramsForQuery += `${prop}=${params[prop]}&`
   }

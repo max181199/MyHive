@@ -2,12 +2,11 @@ const createDatabase = async (login,req,res) =>{
     const { axiosPost, axiosGet } = require('./../../services/axios');
     const { hiveRequest } = require('./../../services/hiveRequest');
     try{
-        login = 'userbase_' + (login === 'NON_LOGIN' ? 'default' : login);
+        let db  = 'userbase_' + (login === 'NON_LOGIN' ? 'default' : login);
         ////TODO::: Узнать где можно найти название отдела и воспользоваться им
         let { databases } = await axiosGet(res,'http://dad-proxy.consultant.ru/10.106.79.70:50111/templeton/v1/ddl/database/?user.name=admin')
-        console.log("Database::",databases)
         let finding_our_db = databases.find((el)=>{
-           el === login 
+           el === db 
         })
         if (finding_our_db !== undefined){
             return(finding_our_db)

@@ -89,6 +89,12 @@ const Main = ({ tablesChanged }) => {
     })()
   }, []);
 
+  const [ request, set_request ] = useState('')
+  const [ send_button, set_send_button ] = useState(true)
+  const send_request = () => {
+    set_send_button(!send_button)
+  }
+
 	return (
 	  <Root>
 	    <Header page="main"/>
@@ -100,15 +106,15 @@ const Main = ({ tablesChanged }) => {
           <Title><TitleText>Таблицы</TitleText></Title>
           <TablesList />
         </Tables>
-        <Editor>
+        <Editor >
           <Title>
             <TitleText>Запрос</TitleText>
           </Title>
-          <CodeEditor />
+          <CodeEditor request={request} setRequest={set_request} send_request={send_request} />
         </Editor>
-        <HistoryQuery>
+        <HistoryQuery  >
           <Title><TitleText>История запросов</TitleText></Title>
-          <History />
+          <History  request={request} set_request={set_request} send_button={send_button} />
         </HistoryQuery>
         </>
       }
