@@ -109,9 +109,17 @@ module.exports = function setup(app) {
     try{
       const job_id = req.query.job_id;
       const result =  await _axiosGet(res,`http://10.106.79.70:50111/templeton/v1/jobs/${job_id}?user.name=admin`)
+      const res_obj = {
+        state : result.status.status,
+        mapProgress : result.status.mapProgress,
+        reduceProgress : result.status.reduceProgress,
+        setupProgress : result.status.setupProgress,
+        cleanupProgress : result.status.cleanupProgress,
+        percentComplete : result.percentComplete,
+      }
       await client2.query(`
-       UPDATE hive_request SET state = '${result.status.state}' WHERE job_id = '${job_id}';`)
-      res.send({state : 'ok', status : result.status})
+       UPDATE hive_request SET state = '${JSON.stringify(res_obj)}' WHERE job_id = '${job_id}';`)
+      res.send({state : 'ok', status : res_obj})
     } catch (err) {
       console.log('GET_JOB_STATUS_ERROR',err)
       res.send({state : 'error',place : 'GET_JOB_STATUS',error : err })
@@ -123,6 +131,7 @@ module.exports = function setup(app) {
       console.log('GET_JOBS_OK')
       const { rows } = await client2.query(`
         SELECT job_id,request,state,date FROM hive_request WHERE login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}'
+        ORDER BY date DESC
       `)
       console.log('GET_JOBS_OK')
       res.send({state : 'ok', rows})

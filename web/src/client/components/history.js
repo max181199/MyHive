@@ -73,38 +73,12 @@ const History = ({ request,set_request, send_button }) => {
             clearInterval(el.timer)
           }
         })
-        set_jobs(data.rows.map((el) => {
-          el.timer = setInterval( async () => {
-            if (el!== undefined){
-              let status = await getJobStatus(el.job_id)
-              if (status === '*ERROR*') {
-                el.state = '*ERROR*'
-                clearInterval(el.timer)
-              } else {
-                el.state = status.state
-                if (status.state === 'SUCCEEDED') {
-                  clearInterval(el.timer)
-                }
-                if (status.state === 'FILED') {
-                  clearInterval(el.timer)
-                }
-              }
-            }
-          }, 5000)
-          return (el)
-        }))
+        set_jobs(data.rows)
       }
     })
   }
 
-  const killJob = (job_id) => {
-    let state = ''
-    jobs.forEach((el) => {
-      if ((el.timer !== undefined) && (el.job_id == job_id)) {
-        clearInterval(el.timer)
-        state = el.state
-      }
-    })
+  const killJob = (job_id,state) => {
     getQuery('/forgot_job',{job_id}).then((data) => {
       if ( data.state == 'ok' ){
         getJobs()
@@ -130,47 +104,55 @@ const History = ({ request,set_request, send_button }) => {
     })
   }
 
+  /// Вынести в отдельный файл
+  const HistoryItem = (el) => {
+
+      const time = setTimeout(async ()=>{
+        word = await getJobStatus(el.job_id)
+        console.log('HearMe',word)
+      },2000)
+
+    return (
+      <HistoryItemWrapper key={'HISTORY_ITEM' + el.date} >
+        <Typography><strong>Дата:</strong> {moment(el.date).format('DD.MM.YYYY HH:mm:ss')}</Typography>
+        <Typography>
+          <strong>Статус: </strong>
+          <span>{`Выполнение (${word}%)`}</span>
+        </Typography>
+        <Progress variant="determinate" value={0} />
+        <Settings>
+          <Tooltip title="Текст запроса">
+            <SettingsBtn size="small">
+              <CodeIcon />
+            </SettingsBtn>
+          </Tooltip>
+          <Tooltip title="Перенести текст">
+            <SettingsBtn onClick={()=>{set_request(el.request)}} size="small">
+              <ReplyAllIcon />
+            </SettingsBtn>
+          </Tooltip>
+          <Tooltip onClick={()=>{console.log('LATER_BE_WORK')}} title="Сохранить результат">
+            <SettingsBtn size="small">
+              <SaveIcon />
+            </SettingsBtn>
+          </Tooltip>
+          <Tooltip onClick={()=>{killJob(el.job_id,el.state)}} title="Удалить запрос">
+            <SettingsBtn size="small">
+              <DeleteOutlineIcon />
+            </SettingsBtn>
+          </Tooltip>
+        </Settings>
+      </HistoryItemWrapper>
+    )
+  }
+  
+
   return (
     <Root>
-      {jobs.map( (el,index)=>{
-        return(HistoryItem(el,index,set_request,killJob))
+      {jobs.map( (el)=>{
+        return(HistoryItem(el))
       })}
     </Root>
-  )
-}
-
-const HistoryItem = (el,index,set_request,killJob) => {
-  return (
-    <HistoryItemWrapper key={'HISTORY_ITEM' + index} >
-      <Typography><strong>Дата:</strong> {moment(el.date).format('DD.MM.YYYY HH:mm:ss')}</Typography>
-      <Typography>
-        <strong>Статус: </strong>
-        <span>{`Выполнение (${0}%)`}</span>
-      </Typography>
-      <Progress variant="determinate" value={0} />
-      <Settings>
-        <Tooltip title="Текст запроса">
-          <SettingsBtn size="small">
-            <CodeIcon />
-          </SettingsBtn>
-        </Tooltip>
-        <Tooltip title="Перенести текст">
-          <SettingsBtn onClick={()=>{set_request(el.request)}} size="small">
-            <ReplyAllIcon />
-          </SettingsBtn>
-        </Tooltip>
-        <Tooltip onClick={()=>{console.log('LATER_BE_WORK')}} title="Сохранить результат">
-          <SettingsBtn size="small">
-            <SaveIcon />
-          </SettingsBtn>
-        </Tooltip>
-        <Tooltip onClick={()=>{killJob(el.job_id)}} title="Удалить запрос">
-          <SettingsBtn size="small">
-            <DeleteOutlineIcon />
-          </SettingsBtn>
-        </Tooltip>
-      </Settings>
-    </HistoryItemWrapper>
   )
 }
 
