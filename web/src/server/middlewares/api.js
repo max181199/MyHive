@@ -99,7 +99,7 @@ module.exports = function setup(app) {
     if ( result.state === 'ok'){
       await client2.query(`
         INSERT INTO hive_request (login,job_id,request,state) 
-        VALUES ('${req.cookies.login || req.signedCookies.login || 'NON_LOGIN' }','${result.job_id}','${req.body.user_req}','creating')
+        VALUES ('${req.cookies.login || req.signedCookies.login || 'NON_LOGIN' }','${result.job_id}','${req.body.user_req}','{"state":"creating"}')
       `)
     }
     res.send(result)
@@ -110,7 +110,7 @@ module.exports = function setup(app) {
       const job_id = req.query.job_id;
       const result =  await _axiosGet(res,`http://10.106.79.70:50111/templeton/v1/jobs/${job_id}?user.name=admin`)
       const res_obj = {
-        state : result.status.status,
+        state : result.status.state,
         mapProgress : result.status.mapProgress,
         reduceProgress : result.status.reduceProgress,
         setupProgress : result.status.setupProgress,

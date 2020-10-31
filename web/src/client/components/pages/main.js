@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import styled from 'styled-components';
 import { Typography } from '@material-ui/core';
 import { connect } from 'react-redux';
-import { getQuery } from './../../services/query-service';
+import { getQuery, postQuery } from '../../services/query-service'
 
 import { tablesChanged } from './../../actions/tables';
 
@@ -80,6 +80,8 @@ const HistoryQuery = styled.div`
 
 const Main = ({ tablesChanged }) => {
   const [loading, setLoading] = useState(true);
+  const [request, set_request ] = useState('');
+  const [jobs , set_jobs] = useState([]);
 
   useEffect(() => {
     (async() => {
@@ -87,12 +89,18 @@ const Main = ({ tablesChanged }) => {
       tablesChanged({...tables,wait : []});
       setLoading(false);
     })()
+    getJobs()
   }, []);
 
-  const [ request, set_request ] = useState('')
-  const [ send_button, set_send_button ] = useState(true)
-  const send_request = () => {
-    set_send_button(!send_button)
+ 
+  const getJobs = () => {
+    set_jobs([])
+    getQuery('/get_jobs').then((data) => {
+      console.log('FRONT_GET_JOBS_DATA:::', data)
+      if (data.state == 'ok') {
+        set_jobs(data.rows)
+      }
+    })
   }
 
 	return (
@@ -110,11 +118,11 @@ const Main = ({ tablesChanged }) => {
           <Title>
             <TitleText>Запрос</TitleText>
           </Title>
-          <CodeEditor request={request} setRequest={set_request} send_request={send_request} />
+          <CodeEditor request={request} setRequest={set_request} getJobs={getJobs} />
         </Editor>
         <HistoryQuery  >
           <Title><TitleText>История запросов</TitleText></Title>
-          <History  request={request} set_request={set_request} send_button={send_button} />
+          <History  jobs={jobs} getJobs={getJobs} set_request={set_request}/>
         </HistoryQuery>
         </>
       }

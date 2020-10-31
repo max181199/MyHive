@@ -2,6 +2,7 @@ import React, {useState, useEffect, useRef} from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 import { Analyzer } from '../services/analyzer'
+import { getQuery, postQuery } from '../services/query-service'
 
 import AceEditor from "react-ace";
 
@@ -26,7 +27,7 @@ const Settings = styled.div`
 `;
 
 
-const CodeEditor = ({ tables , request , setRequest, send_request}) => {
+const CodeEditor = ({ tables , request , setRequest, getJobs}) => {
   const editor = useRef(null);
 
   useEffect(() => {
@@ -62,11 +63,20 @@ const CodeEditor = ({ tables , request , setRequest, send_request}) => {
     editor.current.editor.setOption("enableBasicAutocompletion", [staticWordCompleter]);
   }, [tables])
 
+  const createJob = (user_req) => {
+    postQuery('/create_hive_job', { user_req }).then((data) => {
+      console.log('FRONT_CREATE_JOB_DATA:::', data)
+      if (data.state == 'ok') {
+        getJobs()
+      }
+    })
+  }
+
 	return (
     <Root>
       <Settings>
         <Tooltip title="Выполнить">
-          <IconButton size="small" onClick={()=>{send_request()}}>
+          <IconButton size="small" onClick={()=>{createJob(request)}}>
             <PlayCircleOutlineIcon />
           </IconButton>
         </Tooltip>
