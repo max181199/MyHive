@@ -14,39 +14,38 @@ const History = ({ jobs, getJobs, set_request }) => {
   const [global, set_global] = useState([])
 
   useEffect(() => {
-    if (jobs.length !== 0) {
-      update_global(jobs.reduce((y, x) => {
-        return ({ ...y, [x.job_id]: create_view(JSON.parse(x.state)) })
-      }, {}))
-    }
     let int = setInterval( async () => {
       let nd_update = []
       let un_update = jobs
         .reduce((y, x) => {
           let state = JSON.parse(x.state)
-          console.log(state)
-          if (state.state == 'SUCCEEDED' || state.state == 'FILED' || state.state == 'KILLED' || state.state == 'creating') {
-            console.log('NoHere',state.state)
+          if (state.state == 'SUCCEEDED' || state.state == 'FILED' || state.state == 'KILLED') {
             return ({ ...y, [x.job_id]: create_view(state) })
           } else {
-            console.log('Here')
             nd_update.push(getJobStatus(x.job_id))
             return y
           }
         }, {})
         nd_update = await Promise.all(nd_update)
-        console.log('NP', nd_update )
-      update_global({ ...un_update })
-    }, 3000)
+        console.log('ND:::',nd_update)
+        update_global({ ...un_update,...nd_update.reduce((y,x)=>{
+          let state = x
+          return ({ ...y, [state.job_id]: create_view(state) })
+        },{})})
+    }, 1000)
+
+    if (jobs.length !== 0) {
+      update_global(jobs.reduce((y, x) => {
+        return ({ ...y, [x.job_id]: create_view(JSON.parse(x.state)) })
+      }, {}))
+    } else {clearInterval(int)}
+
     return (() => { clearInterval(int) })
   }, [jobs])
 
   const update_global = (obj) => {
-    console.log('GET_GL_UP', obj)
     set_global({ ...global, ...obj })
   }
-
-  console.log('GLOBAL:', global)
 
   const create_view = (status) => {
     if (status.state == 'KILLED') {
@@ -98,7 +97,6 @@ const History = ({ jobs, getJobs, set_request }) => {
       if (status.setupProgress == 1) {
         return (
           {
-
             color: '#2196f3',
             word: 'Выполняется (0%)',
             percent: 0,

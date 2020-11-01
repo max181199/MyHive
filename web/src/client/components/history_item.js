@@ -56,14 +56,13 @@ const HistoryItem = (el,setupVNE,getJobs,set_request)=>{
     getQuery('/forgot_job',{job_id}).then( async (data) => {
       if ( data.state == 'ok' ){
         let res = await getJobStatus(job_id)
-        console.log('KILL:::',res)
+        getJobs()
         if ( res.state === 'RUNNING' || res.state === 'ACCEPTED' || res.state === 'PREP' ){
           getQuery('/kill_job',{job_id}).then((data) =>{
             if (data.state !== 'ok'){
               console.log('FRONT_KILL_JOB_ERROR')
             }
           })
-          getJobs()
         }
       } else {
         console.log('FRONT_FORGOT_JOB_ERROR')
