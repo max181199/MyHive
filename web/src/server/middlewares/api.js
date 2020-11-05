@@ -1,6 +1,6 @@
 const fs = require('fs');
 const multer = require('multer');
-const { client2 } = require('../services/pg');
+const { client2,client } = require('../services/pg');
 const { promisify } = require('util');
 const createTable = require('./requests/createTable');
 const { _axiosGet,_axiosPost,_axiosDelete } = require('../services/axios');
@@ -135,7 +135,8 @@ module.exports = function setup(app) {
         SELECT job_id,request,state,date FROM hive_request WHERE login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}'
         ORDER BY date DESC
       `)
-      console.log('GET_JOBS_OK')
+      console.log('GET_JOBS_DONE')
+      
       res.send({state : 'ok', rows})
     } catch(err){
       console.log('GET_JOBS_ERROR',err)
