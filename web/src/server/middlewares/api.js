@@ -101,6 +101,7 @@ module.exports = function setup(app) {
         INSERT INTO hive_request (login,job_id,request,state) 
         VALUES ('${req.cookies.login || req.signedCookies.login || 'NON_LOGIN' }','${result.job_id}','${req.body.user_req}','{"state":"creating","job_id":"${result.job_id}"}')
       `)
+      console.log('DB_IT_DB_ERROR')
     }
     res.send(result)
   })
