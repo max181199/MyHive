@@ -101,7 +101,7 @@ const StSpan = styled.span`
 
 const cookies = new Cookies();
 
-const TablesList = ({tables, tablesChanged}) => {
+const TablesList = ({tabs,setTabs,tables, tablesChanged}) => {
   const [menu, onMenuChange] = useState({});
   const setMenu = (name) => {
     onMenuChange({
@@ -123,7 +123,16 @@ const TablesList = ({tables, tablesChanged}) => {
 
   const saveCSV = (e) =>{
     let file = e.target.files[0]
-    addUpload(file.name).then( (res)=>{sendCSV(file,res)} ) 
+    //console.log(file);
+    addUpload(file.name).then( (res)=>{setTabs([...tabs,{
+      title : file.name.length > 10 ? (file.name.slice(0,9) + '...') : file.name,
+      fulnm : file.name,
+      type  : 'accept',
+      new   : 'true',
+      drop  : true,
+      file  : file,
+      res   : res
+    }])} ) 
   }
 
   const addUpload = async (f_name) => {
@@ -140,18 +149,7 @@ const TablesList = ({tables, tablesChanged}) => {
     return( result.names )
   }
 
-  const sendCSV = async ( csv , obj ) => {
-    const data = new FormData()
-    data.append( 'csv_file', csv , obj.name ) 
-    data.append('id',obj.id)
-    let apiBase = `${window.location.protocol}//${window.location.host}/api`
-    let response = await fetch(apiBase+'/uploadCSV', {
-        method: 'POST',
-        body: data
-    });
-    let result = await response.json();
-    console.log('RESULT__:::',result)
-}
+  
 
   const renderItem = (item, i, name) => {
     return(

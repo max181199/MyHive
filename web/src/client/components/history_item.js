@@ -32,7 +32,7 @@ const SettingsBtn = styled(IconButton)`
   margin-right: 15px;
 `;
 
-const HistoryItem = (el,setupVNE,getJobs,set_request)=>{
+const HistoryItem = (el,setupVNE,getJobs,set_request,setValue)=>{
 
   let setup = setupVNE === undefined ? {
     color : '#2196f3',
@@ -78,6 +78,23 @@ const HistoryItem = (el,setupVNE,getJobs,set_request)=>{
         <span>{setup.word}</span>
       </Typography>
       <Progress mycolor={setup.color} variant="determinate" value={setup.percent} />
+      { 
+        setup.doubleWord != null
+        ?
+        <Typography>
+          <strong>Статус: </strong>
+          <span>{doubleWord}</span>
+        </Typography>
+        :
+        null
+      }
+      {
+        setup.doublePercent != null
+        ?
+        <Progress mycolor={setup.color} variant="determinate" value={setup.doublePercent} />
+        :
+        null
+      }
       <Settings>
         <Tooltip title="Текст запроса">
           <SettingsBtn size="small">
@@ -85,7 +102,7 @@ const HistoryItem = (el,setupVNE,getJobs,set_request)=>{
           </SettingsBtn>
         </Tooltip>
         <Tooltip title="Перенести текст">
-          <SettingsBtn onClick={()=>{set_request(el.request)}} size="small">
+          <SettingsBtn onClick={()=>{set_request(el.request),setValue(0)}} size="small">
             <ReplyAllIcon />
           </SettingsBtn>
         </Tooltip>

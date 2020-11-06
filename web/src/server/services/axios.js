@@ -45,8 +45,8 @@ const _axiosDelete = async (res, url) => {
 }
 
 
-const axiosPut = async (url) => {
-    const res = await axios.put(encodeURI(url));
+const axiosPut = async (url,body,conf) => {
+    const res = await axios.put(encodeURI(url),body,conf);
     return await res.data;
 }
 

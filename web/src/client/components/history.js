@@ -8,7 +8,7 @@ const Root = styled.div`
 `;
 
 
-const History = ({ jobs, getJobs, set_request }) => {
+const History = ({ setValue,jobs, getJobs, set_request }) => {
 
 
   const [global, set_global] = useState([])
@@ -27,7 +27,6 @@ const History = ({ jobs, getJobs, set_request }) => {
           }
         }, {})
         nd_update = await Promise.all(nd_update)
-        console.log('ND:::',nd_update)
         update_global({ ...un_update,...nd_update.reduce((y,x)=>{
           let state = x
           return ({ ...y, [state.job_id]: create_view(state) })
@@ -53,14 +52,18 @@ const History = ({ jobs, getJobs, set_request }) => {
         {
           color: 'black',
           word: 'Отменено',
-          percent: 100
+          percent: 100,
+          doubleWord : null,
+          doublePercent : null
         })
     } else if (status.state == 'creating') {
       return (
         {
           color: '#2196f3',
-          word: 'Получаем состояние',
-          percent: 100
+          word: 'Узнаем состояние отчета',
+          percent: 100,
+          doubleWord : null,
+          doublePercent : null
         })
     } else if (status.state == 'SUCCEEDED') {
       return (
@@ -68,6 +71,8 @@ const History = ({ jobs, getJobs, set_request }) => {
           color: '#4caf50',
           word: 'Выполнено (100%)',
           percent: 100,
+          doubleWord : null,
+          doublePercent : null,
         })
     } else if (status.state == 'FAILED') {
       return (
@@ -76,38 +81,70 @@ const History = ({ jobs, getJobs, set_request }) => {
           color: '#ff5722',
           word: 'Ошибка',
           percent: 100,
+          doubleWord : null,
+          doublePercent : null,
         })
     } else if (status.state == 'ACCEPTED') {
       return (
         {
-
           color: '#4caf50',
           word: 'Запрос принят',
           percent: 0,
+          doubleWord : null,
+          doublePercent : null,
         })
     } else if (status.state === 'PREP') {
       return (
         {
-
           color: '#ffc107',
           word: 'Подготовка',
           percent: 100,
+          doubleWord : null,
+          doublePercent : null,
         })
     } else if (status.state === 'RUNNING') {
       if (status.setupProgress == 1) {
         return (
           {
-            color: '#2196f3',
-            word: 'Выполняется (0%)',
-            percent: 0,
+            color: '#ffeb3b',
+            word: 'Установка',
+            percent: 100,
+            doubleWord : null,
+            doublePercent : null,
           })
+      } else if (status.cleanupProgress == 1){
+          return (
+            {
+              color: '#ffeb3b',
+              word: 'Очистка',
+              percent: 100,
+              doubleWord : null,
+              doublePercent : null,
+            }
+          )
       } else {
-        return (
-          {
-            color: '#2196f3',
-            word: 'Выполняется (25%)',
-            percent: 25,
-          })
+        const parseData = status.percentComplete == null ? null : status.percentComplete.split(' ')
+        if (parseData == null){
+          return(
+            {
+              color: '#2196f3',
+              word: 'Map(??%)',
+              percent: 0,
+              doubleWord : 'Reduce(??%)',
+              doublePercent : 0,
+            }
+          )
+        } else {
+          return (
+            {
+              color: '#2196f3',
+              word: `Map(${parseData[1]}%)`,
+              percent: parseData[1],
+              doubleWord : `Reduce(${parseData[3]}%)`,
+              doublePercent : parseData[3],
+            }
+          )
+        }
       }
     }
   }
@@ -130,7 +167,7 @@ const History = ({ jobs, getJobs, set_request }) => {
     <Root>
       <>
         {jobs.map((el) => {
-          return (HistoryItem(el, global[el.job_id], getJobs, set_request))
+          return (HistoryItem(el, global[el.job_id], getJobs, set_request,setValue))
         })}
       </>
     </Root>

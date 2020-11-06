@@ -10,10 +10,10 @@ const unlinkAsync = promisify(fs.unlink)
 
 let storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, '/tmp/loadTable')
+    cb(null, '/Users/max/Work/tmp')
   },
   filename: function (req, file, cb) {
-    cb(null, file.originalname + '.csv')
+    cb(null, file.originalname + '.csv'  )
   }
 })
 
@@ -34,7 +34,7 @@ module.exports = function setup(app) {
     try{
       const { rows } = await client2.query(`
         INSERT INTO smsuploadfileinfo (login, name, state) 
-        VALUES ('${req.cookies.login || req.signedCookies.login || 'NON_LOGIN' }','${req.query.name.slice(0,req.query.name.length - 4) + new Date().valueOf() }', 'Загрузка данных на сервер')
+        VALUES ('${req.cookies.login || req.signedCookies.login || 'NON_LOGIN' }','${req.query.name.slice(0,req.query.name.length - 4) + '_' + new Date().valueOf() }', 'Загрузка данных на сервер')
         RETURNING id,name
       `)
       res.send({status : 'ok', place : 'addRows' ,id : rows[0].id,name : rows[0].name })
@@ -66,12 +66,12 @@ module.exports = function setup(app) {
         UPDATE smsuploadfileinfo SET state = 'Анализируем заголовок' WHERE id = ${req.body.id};`)
       let  { getHeader } = require('../services/header')
       let header = await getHeader(req.files['csv_file'][0].path)
-      // Копируем файл на сервер hadoop // Server Error
-      // await client2.query(`
-      //   UPDATE smsuploadfileinfo SET state = 'Передаем данные на сервер' WHERE id = ${req.body.id};`)
-      // let { copyToHDFS } = require('../services/copyToHDFS')
-      // let result = await copyToHDFS(req.files['csv_file'][0].path,header.offset,name,res)
-      // console.log('RESULT:::',result)
+      //Копируем файл на сервер hadoop // Server Error
+      await client2.query(`
+        UPDATE smsuploadfileinfo SET state = 'Передаем данные на сервер' WHERE id = ${req.body.id};`)
+      let { copyToHDFS } = require('../services/copyToHDFS')
+      let result = await copyToHDFS(req.files['csv_file'][0].path,header.offset,name,res)
+      console.log('RESULT:::',result)
       // Проверяем на наличие схемы // Server Error
       // await client2.query(`
       //   UPDATE smsuploadfileinfo SET state = 'Проверяем наличие БД' WHERE id = ${req.body.id};`)
@@ -112,6 +112,7 @@ module.exports = function setup(app) {
       const result =  await _axiosGet(res,`http://10.106.79.70:50111/templeton/v1/jobs/${job_id}?user.name=admin`)
       const res_obj = {
         job_id : job_id,
+        runState : result.status.runState,
         state : result.status.state,
         mapProgress : result.status.mapProgress,
         reduceProgress : result.status.reduceProgress,

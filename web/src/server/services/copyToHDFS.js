@@ -17,7 +17,7 @@ const copyToHDFS = (path,file_offset,name,res)=>{
               })
             })
             // Запрашиваем адреc dataNode hdfs для отправки данных
-            axiosPut(`http://dad-proxy.consultant.ru/hadoop-manager1.consultant.ru:50070/webhdfs/v1/tmp/hive_upload_table/${name}.csv?op=CREATE&overwrite=true`)
+            axiosPut(`http://hadoop-manager1.consultant.ru:50070/webhdfs/v1/user/admin/tmp/hive_upload_table/${name}.csv?op=CREATE&overwrite=true`,null,{maxRedirects : 1})
             .then( (data)=>{
               console.log('HDFS_DATANODE_RESULT:::', JSON.stringify(data,null,2))
               resolve({
