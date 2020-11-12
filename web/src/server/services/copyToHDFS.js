@@ -1,75 +1,109 @@
-const copyToHDFS = (path,file_offset,name,res)=>{
+const { error } = require('console');
+
+const copyToHDFS = (path,name)=>{
     return(
         new Promise(function (resolve, reject) {
           try {
             const fs = require('fs');
-            const { axiosPut,axiosPost } = require('../services/axios')
-            // Создаем папку в hdfs
-            axiosPut('http://hadoop-manager1.consultant.ru:50070/webhdfs/v1/tmp/hive_upload_table?op=MKDIRS&user=admin')
-            .then( (data)=>{
-              console.log('HDFS_MKDIR_RESULT:::', JSON.stringify(data,null,2))
+            let WebHDFS = require('webhdfs');
+            let hdfs = WebHDFS.createClient({
+              user: 'administrator',
+              host: 'hadoop-manager1.consultant.ru',
+              port: 50070,
+            });
+            hdfs.mkdir('/user/admin/tmp/hive_upload_table',(err)=>{
+              if (err !== null){
+                console.log('HDFS_COPY_MKDIR_ERR:',err);
+                resolve(
+                  {
+                    status : 'error',
+                    place : 'HDFS_COPY_MKDIR',
+                  })
+              }
             })
-            .catch( (err)=>{
-              console.log('HDFS_MKDIR_ERROR:::',err)
-              resolve({
-                status : 'error',
-                'place' : 'HDFS_MKDIR'
+            //Открываем файлы
+              let remoteFileStream = hdfs.createWriteStream('/user/admin/tmp/hive_upload_table/' + name)
+              let localFileStream  = fs.createReadStream(path)
+
+            // Обработка файла для чтения (local)
+              localFileStream
+              .on('error',(error)=>{
+                console.log('HTFS_COPY_HDFS_LOCAL_FILE_ERROR:::',error)
+                resolve({
+                  status : 'error',
+                  place : 'HDFS_COPY_LOCAL_FILE'
+                })
               })
-            })
-            // Запрашиваем адреc dataNode hdfs для отправки данных
-            axiosPut(`http://hadoop-manager1.consultant.ru:50070/webhdfs/v1/user/admin/tmp/hive_upload_table/${name}.csv?op=CREATE&overwrite=true`,null,{maxRedirects : 1})
-            .then( (data)=>{
-              console.log('HDFS_DATANODE_RESULT:::', JSON.stringify(data,null,2))
-              resolve({
-                status : 'ok'
+
+            // Обработка файла для записи (remote)
+              remoteFileStream
+              .on('error',(error)=>{
+                console.log('HTFS_COPY_REMOTE_FILE_ERROR:::',error)
+                resolve({
+                  status : 'error',
+                  place : 'HDFS_COPY_LOCAL_FILE'
+                })
               })
-            })
-            .catch( (err)=>{
-              console.log('HDFS_DATANODE_ERROR:::',err)
-              resolve({
-                status : 'error',
-                'place' : 'HDFS_DATANODE'
+              remoteFileStream.on('finish',()=>{
+                resolve({status : 'ok'})
               })
-            })
-
-
-            // Создаем файл и переносим в него данные ( Отбрасываем заголовок )
-            // Файл для записи
-            // let remoteFileStream = hdfs.createWriteStream('/user/admin/test/hive_upload_table/' + name ,{ encoding: 'utf8'})
-            //   .on('error',(error)=>{
-            //     console.log('HTFS_COPY_HDFS_FILE_ERROR:::',error)
-            //     reject({
-            //       'error' : erorr,
-            //       'place' : 'HTFS_COPY_HDFS_FILE'
-            //     })
-            //   })
-            // // Файл для чтения
-            // let localFileStream = fs.createReadStream(path,{ encoding: 'utf8',start : file_offset + 1})
-            // .on('error',(error)=>{
-            //   console.log('HTFS_COPY_LOCAL_FILE_ERROR:::',error)
-            //   reject({
-            //     'error' : erorr,
-            //     'place' : 'HTFS_COPY_LOCAL_FILE'
-            //   })
-            // })
-
-            // localFileStream.pipe(remoteFileStream)
-
-            // remoteFileStream.on('finish',()=>{
-            //   resolve({status : 'ok'})
-            // })
-
-          } catch(err) {
-            console.log('COPY_FILE_TO_HDFS_ERROR:::',err)
-            reject({
-              'error' : err,
-              'place' : 'COPY_TO_HDFS'
+            //  Потоковая отправка данных
+              localFileStream.pipe(remoteFileStream)
+          } catch(error) {
+            console.log('COPY_TO_HDFS_ERROR:::',error)
+            resolve({
+              status : 'error',
+              place : 'COPY_TO_HDFS',
             })
           }
         })
     )
 }
 
+const _ASYNC_SEND_FILE_ = (path,name) => {
+  return(
+    new Promise( async function(resolve,reject){
+      try {
+        console.log('_ASYNC_SEND_FILE_BEGIN_')
+        let sending_count = 5
+        let promise_array = []
+        for (let i = 0; i < sending_count; i++) {
+          let new_promise = copyToHDFS(path,name)
+          promise_array.push(new_promise)          
+        }
+        await Promise.all(promise_array).then( (result)=>{
+          let sent = false
+          result.forEach((el)=>{
+            if (el.status == 'ok') {
+              sent = true
+            }
+          })
+          if (sent){
+            console.log('_ASYNC_SEND_FILE_CATCH_OK_:::',result)
+            resolve({
+              status : 'ok'
+            })
+          } else {
+            console.log('_ASYNC_SEND_FILE_ALL_TIMEOUT_:::',result)
+            reject({
+              status : 'error',
+              place : '_ASYNC_SEND_FILE_'
+            })
+          }
+        })
+      } catch(error) {
+        console.log('_ASYNC_SEND_FILE_ERROR:::',error)
+        resolve({
+          status : 'error',
+          place : '_ASYNC_SEND_FILE_'
+        })
+      }
+    })
+  )
+}
+
+
 module.exports = {
+  _ASYNC_SEND_FILE_,
   copyToHDFS
 }

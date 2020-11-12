@@ -172,7 +172,7 @@ const Main = ({ tablesChanged }) => {
           {
             tabs[value].type == 'accept'
             ?
-            <Accept tabs={tabs} setTabs={setTabs} value={value} setValue={setValue}/>
+            <Accept  tabs={tabs} setTabs={setTabs} value={value} setValue={setValue}/>
             :
             null
           }

@@ -56,35 +56,44 @@ module.exports = function setup(app) {
 
   app.post('/api/uploadCSV', upload, async (req, res) => {
     try{
-      
+
       // Имя файла
-      const { rows } = await client2.query(`
-        SELECT name FROM smsuploadfileinfo WHERE id = ${req.body.id}`)
-      let name = rows[0].name;
-      // Заголовок для создания таблицы
-      await client2.query(`
-        UPDATE smsuploadfileinfo SET state = 'Анализируем заголовок' WHERE id = ${req.body.id};`)
-      let  { getHeader } = require('../services/header')
-      let header = await getHeader(req.files['csv_file'][0].path)
-      //Копируем файл на сервер hadoop // Server Error
-      await client2.query(`
-        UPDATE smsuploadfileinfo SET state = 'Передаем данные на сервер' WHERE id = ${req.body.id};`)
-      let { copyToHDFS } = require('../services/copyToHDFS')
-      let result = await copyToHDFS(req.files['csv_file'][0].path,header.offset,name,res)
-      console.log('RESULT:::',result)
-      // Проверяем на наличие схемы // Server Error
-      // await client2.query(`
-      //   UPDATE smsuploadfileinfo SET state = 'Проверяем наличие БД' WHERE id = ${req.body.id};`)
-      // let { createDatabase } = require('./requests/createDatabase')  
-      // let databaseName = await createDatabase(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',req,res)
-      // console.log('DATABASE_NAME:::',databaseName)
+        const { rows } = await client2.query(`
+          SELECT name FROM smsuploadfileinfo WHERE id = ${req.body.id}`)
+        let name = rows[0].name;
+
+      //Копируем файл на сервер hadoop 
+        await client2.query(`
+          UPDATE smsuploadfileinfo SET state = 'Передаем данные на сервер' WHERE id = ${req.body.id};`)
+        let { copyToHDFS,_ASYNC_SEND_FILE_ } = require('../services/copyToHDFS')
+        //let result = await copyToHDFS(req.files['csv_file'][0].path,name)
+        // Временное решение, тяжелое и не эффективное( для маленьких файлов сойдет)
+          //await _ASYNC_SEND_FILE_(req.files['csv_file'][0].path,name) 
+
+      //Считаем, что наш файлик уже лежит на сервере и все хорошо) и имя его >>>
+        name = 'test_csv_1605187285246' // Магия ошибок 
+        
+      //Проверяем на наличие схемы 
+        await client2.query(`
+          UPDATE smsuploadfileinfo SET state = 'Проверяем наличие БД' WHERE id = ${req.body.id};`)
+        let { createDatabase } = require('./requests/createDatabase')  
+        let databaseName = await createDatabase(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',res)
+      
+      //Пересоздаем таблицу( Аналогичной нет, поскольку существует аременная метка)
+
+      //Удаляем файл на сервере hdfs
+        //let { deleteFromHDFS } = require('../services/deleteFromHDFS')
+          //await deleteFromHDFS(name)
+
       //Удаляем файл на устройстве
-      await unlinkAsync(req.files['csv_file'][0].path)
+        await unlinkAsync(req.files['csv_file'][0].path)
+
       //Архивируем запись о загруженных таблицах
-      const { rows : rw1 } = await client2.query(`
-        UPDATE smsuploadfileinfo SET state = 'ok' WHERE id = ${req.body.id};`)
+        const { rows : rw1 } = await client2.query(`
+          UPDATE smsuploadfileinfo SET state = 'ok' WHERE id = ${req.body.id};`)
+      
       //Возвращаем ответ 
-      res.send({ status: 'ok',name  });
+      res.send({ status: 'ok',name});
     } catch(err){
       console.log("API_uploadCSV_ERROR",err)
       res.send({status : 'error'})

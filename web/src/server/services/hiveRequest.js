@@ -37,7 +37,7 @@ const hiveRequest = async (req) => {
                 await utils.fetchAll(operation);
                 await operation.close();
 
-                const result = await utils.getResult(operation).getValue();
+                const result = await utils.getResult(operation);
 
                 await session.close();
                 await client.close();
