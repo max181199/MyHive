@@ -5,14 +5,15 @@ import Tooltip from '@material-ui/core/Tooltip';
 import SendIcon from '@material-ui/icons/Send';
 import CloseIcon from '@material-ui/icons/Close';
 import { Typography } from '@material-ui/core';
-import LineFileReader from 'line-file-reader';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-
+import MenuItem from '@material-ui/core/MenuItem';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import Select from '@material-ui/core/Select';
 import { FormControl } from '@material-ui/core';
 import { InputLabel } from '@material-ui/core';
 import { Input } from '@material-ui/core';
@@ -47,11 +48,12 @@ const TablePlace = styled.div`
 
 const StTableCell = styled(TableCell)`
   border : 1px solid lightgrey;
-  min-width: 200px;
+  min-width: 150px;
   text-align: center;
 `;
 
 const StFormControl = styled(FormControl)`
+  width: 100%;
   & > div{
     &:hover {
       &:before {
@@ -67,12 +69,17 @@ const StFormControl = styled(FormControl)`
   }
 `
 
-const Accept = ({tabs,setTabs,value,setValue})=>{
+const Accept = ({ header_type,set_header_type,error,setError,columns,setColumns, header_name, set_header_name, tabs,setTabs,value,setValue})=>{
   
-const sendCSV = async ( csv , obj ) => {
+//console.log('CLMNS:::',columns)
+//console.log('HEADER:::',header_name)
+  
+const sendCSV = async ( csv , obj,h_t,h_n ) => {
   const data = new FormData()
   data.append( 'csv_file', csv , obj.name ) 
   data.append('id',obj.id)
+  data.append('header_type',h_t)
+  data.append('header_name',h_n)
   let apiBase = `${window.location.protocol}//${window.location.host}/api`
   let response = await fetch(apiBase+'/uploadCSV', {
       method: 'POST',
@@ -83,7 +90,7 @@ const sendCSV = async ( csv , obj ) => {
 }
 
 const send = ()=>{
-  sendCSV(tabs[value].file,tabs[value].res)
+  sendCSV(tabs[value].file,tabs[value].res,header_type,header_name)
   setValue(value-1)
   let tmp = [...tabs.slice(0,value),...tabs.slice(value+1,tabs.length)]
   setTabs(tmp)
@@ -95,27 +102,7 @@ const close = ()=>{
   setTabs(tmp)
 }
 
-
-const getLine = async ( file  )=>{
-  const reader = new LineFileReader(file)
-  const async_iterator = reader.iterate('\n',4096)
-  let myLine = []
-  let count = 10;
-  for await (const line of async_iterator) {
-    count--;
-    myLine.push(line.split(', '))
-    if (count == 0) break;
-  }
-  return myLine
-}
-
-const [columns,setColumns] = useState([[]])
-const [error,setError] = useState(false)
-const [header_name,set_header_name ] = useState([])
-const [prev,setPrev] = useState(value)
-
 const header_name_maper = (text,index)=>{
-
   let blcerr = 'false'
   header_name.forEach((el,ind)=>{
     if (el==text & ind !== index){
@@ -127,17 +114,17 @@ const header_name_maper = (text,index)=>{
       setError(true)
     }
   }
-
-
   return(
-    <StTableCell key={'COLUMN_HEADER'  + index }>
+    <StTableCell key={'COLUMN_HEADER_NAME'  + index }>
       <StFormControl blcerr={blcerr} >
         <Input 
           value={text}
           onChange={(e)=>{
+            const value = e.target.value;
+            if (value.slice(-1) === ' ') return;
             let tmp = header_name
             setError(false)
-            tmp[index] = e.target.value
+            tmp[index] = value
             set_header_name([...tmp])
           }}  
         />
@@ -146,28 +133,40 @@ const header_name_maper = (text,index)=>{
   )
 }
 
-useEffect(()=>{
-  tabs[prev].header_name = header_name
-  setTabs([...tabs])
-  setPrev(value)
-  getLine(tabs[value].file).then(data=>setColumns(data))
-},[value])
+const header_type_mapper = (type,index) => {
+  return(
+    <StTableCell key={'COLUMN_HEADER_TYPE'  + index }>
+      <StFormControl>
+        <Input 
+          value={type}
+          onChange={(e)=>{
+            const value = e.target.value;
+            let tmp = header_type
+            tmp[index] = value
+            set_header_type([...tmp])
+          }}  
+        />
+      </StFormControl>
+    </StTableCell>  
+  )
+}
 
-useEffect(()=>{
-  getLine(tabs[value].file).then(data=>setColumns(data))
-},[])
 
-useEffect(()=>{
-  if(tabs[value].header_name != undefined){
-    set_header_name(tabs[value].header_name)
-  } else {
-    let result = []
-    for (let i = 0; i <= columns[0].length; i++){
-      result.push( 'Column' + i)
-    } 
-    set_header_name(result)
-  }
-},[columns])
+const columnsMapper = (text,in1,in2) => {
+  return(
+    <StTableCell key={'COLUMN_BODY'  + '_' + in1 + '_' + in2  }>
+      {text}
+    </StTableCell>  
+  )
+}
+
+const rowMapper = (row,index) => {
+  return(
+    <TableRow key={'ROW' + index}>
+      { row.map((el,ind)=>columnsMapper(el,ind,index))}
+    </TableRow>
+  )
+}
 
 return(
   <Root>
@@ -208,7 +207,13 @@ return(
             <TableRow>
               {header_name.map((el,index)=>header_name_maper(el,index))}
             </TableRow>
+            <TableRow>
+              {header_type.map((el,index)=>header_type_mapper(el,index))}
+            </TableRow>
           </TableHead>
+          <TableBody>
+            {columns.map((el,ind)=> rowMapper(el,ind))}
+          </TableBody>
         </Table>
       </TableContainer>
     </TablePlace>

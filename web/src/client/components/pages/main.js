@@ -12,6 +12,7 @@ import History from "./../history";
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Accept from '../acceptTab'
+import LineFileReader from 'line-file-reader';
 
 const Root = styled.div`
   width: 100%;
@@ -94,7 +95,7 @@ const StTab = styled(Tab)`
   color : ${props=>props.clr=='false'?'grey':'#ef5350'};
 `;
 
-const Main = ({ tablesChanged }) => {
+const Main = ({tables, tablesChanged }) => {
   const [loading, setLoading] = useState(true);
   const [request, set_request ] = useState('');
   const [jobs , set_jobs] = useState([]);
@@ -104,15 +105,41 @@ const Main = ({ tablesChanged }) => {
     new   : 'false',
     drop  : false
   }])
+
+  const getLine = async ( file  )=>{
+    const reader = new LineFileReader(file)
+    const async_iterator = reader.iterate('\n',4096)
+    let myLine = []
+    let count = 10;
+    for await (const line of async_iterator) {
+      count--;
+      myLine.push(line.split(', '))
+      if (count == 0) break;
+    }
+    return await myLine
+  }
+
   const [value, setValue] = React.useState(0);
+  const [previosValue, setPreviosValue ] = React.useState(0);
+  const [header_name,set_header_name ] = useState([])
+  const [header_type,set_header_type ] = useState([]) 
+  const [columns,setColumns] = useState([[]])
+  const [accError,setAccError] = useState(false)
 
   useEffect(() => {
-    (async() => {
-      const tables = await getQuery({url: '/getMainInfo'});
+    (async () => {
+      const tables = await getQuery('/getMainInfo');
+      //console.log('TABLES:::',tables)
       tablesChanged({...tables,wait : []});
       setLoading(false);
     })()
+    let int_id = setInterval( async ()=>{
+      const data = await getQuery('/getMainInfo');
+      //console.log('EXUXUX::',data)
+      tablesChanged({...tables,...data});
+    },60000)
     getJobs()
+    return(()=>{clearInterval(int_id)})
   }, []);
 
  
@@ -133,6 +160,48 @@ const Main = ({ tablesChanged }) => {
   useEffect(()=>{
     let tmp = tabs;
     tmp[value].new = 'false'
+    if ( (tmp[previosValue] != undefined) && (tmp[previosValue].type == 'accept') ){
+      tmp[previosValue].header_name = header_name
+      tmp[previosValue].header_type = header_type
+    }
+    if( tmp[value].type == 'accept' ){
+      setColumns([])
+      getLine(tmp[value].file).then((data)=>{
+        if ( tmp[value].header_name != undefined){
+          set_header_name(tmp[value].header_name)
+        } else {
+          if ( data.length !== 0){
+            let res = []
+            let index = 1
+            for ( let i in data[0] ){
+              res.push('Column_' + index)
+              index++;
+            }
+            set_header_name(res)
+          } else {
+            set_header_name([])
+          }
+        }
+        if ( tmp[value].header_type != undefined){
+          set_header_type(tmp[value].header_type)
+        } else {
+          if ( data.length !== 0){
+            let res = []
+            let index = 1
+            for ( let i in data[0] ){
+              res.push('STRING')
+              index++;
+            }
+            set_header_type(res)
+          } else {
+            set_header_type([])
+          }
+        }
+        setAccError(false)
+        setColumns(data)
+      })
+    }
+    setPreviosValue(value)
     setTabs(tmp)
   },[value])
 
@@ -156,9 +225,9 @@ const Main = ({ tablesChanged }) => {
             indicatorColor="primary"
             textColor="primary"
           >
-            {tabs.map((el)=>{
+            {tabs.map((el,index)=>{
               return(
-                <StTab clr={el.new} key={'Tab_' + el.title } label={el.title}/>
+                <StTab clr={el.new} key={'Tab_' + index + '_' + (el.fulnm == undefined ? el.title : el.fulnm) } label={el.title}/>
               )
             })}
           </StTabs>
@@ -172,7 +241,7 @@ const Main = ({ tablesChanged }) => {
           {
             tabs[value].type == 'accept'
             ?
-            <Accept  tabs={tabs} setTabs={setTabs} value={value} setValue={setValue}/>
+            <Accept header_type={header_type} set_header_type={set_header_type} error={accError} setError={setAccError} columns={columns} setColumns={setColumns} header_name={header_name} set_header_name={set_header_name}  tabs={tabs} setTabs={setTabs} value={value} setValue={setValue}/>
             :
             null
           }
@@ -188,8 +257,5 @@ const Main = ({ tablesChanged }) => {
   )
 }
 
-const mapDispatchToProps = {
-  tablesChanged
-};
 
-export default connect(null, mapDispatchToProps)(Main);
+export default connect((store)=>({tables : store.tables}), {tablesChanged})(Main);

@@ -100,9 +100,7 @@ const StIconButtonContent = styled(IconButton)`
   font-size : 28px;
 `;
 
-const Header = ({ page,state,cb}) => {
-
-  
+const Header = ({ page,state,cb}) => {  
   return (
     <Root>
       {

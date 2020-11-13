@@ -1,6 +1,6 @@
 const updateAllTables = async (req, res) => {
   const { axiosGet } = require('./../../services/axios');
-  const { queryPg } = require('./../../services/pg');
+  const { queryPg, client } = require('./../../services/pg');
   const moment = require('moment');
 
   const { databases } = await axiosGet(res, `http://10.106.79.70:50111/templeton/v1/ddl/database?user.name=admin`);
@@ -15,7 +15,6 @@ const updateAllTables = async (req, res) => {
         columns
       });
     }
-
     const updateQuery = `
       DELETE FROM hive_manager.tables
       WHERE name = '${databases[i]}';
@@ -23,7 +22,7 @@ const updateAllTables = async (req, res) => {
       INSERT INTO hive_manager.tables(name, describe, updated_at)
       VALUES ('${databases[i]}', '${JSON.stringify(data)}', '${moment().format()}');
     `;
-    await queryPg(res, updateQuery);
+    await client.query(updateQuery);
   }
 }
 

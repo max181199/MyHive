@@ -5,6 +5,8 @@ const cookieParser = require('cookie-parser');
 const setupApiRoutes = require('./middlewares/api');
 const logger = require('./logger');
 const authFilter = require('./middlewares/auth-filter');
+const schedule = require('node-schedule')
+const updateConsultantTable = require('./middlewares/requests/updateConsultantTable')
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.HTTP_PORT = process.env.HTTP_PORT || 30007;
@@ -47,3 +49,5 @@ srvr.listen(process.env.HTTP_PORT, () => {
   console.log(`Server is now running on http://localhost:${process.env.HTTP_PORT}`);
 });
 srvr.timeout = 1800000;
+
+schedule.scheduleJob('0 * * * *',updateConsultantTable)

@@ -28,7 +28,6 @@ const Root = styled.div`
   width: 100%;
   height: 100vh;
 `;
-
 const EmptyList = styled(Typography)`
   width: 100%;
   padding: 5px 20px; 
@@ -82,7 +81,6 @@ const SETListItemBlock = styled(ListItem)`
 const StIconButton = styled(IconButton)`
   padding : 0;
 `;
-
 const StListItemBlock = styled(ListItemBlock)`
   display : block;
   & > div{
@@ -92,7 +90,6 @@ const StListItemBlock = styled(ListItemBlock)`
     }
   }
 `
-
 const StSpan = styled.span`
   color : grey;
   font-size : 14px;
@@ -112,27 +109,34 @@ const TablesList = ({tabs,setTabs,tables, tablesChanged}) => {
 
   useEffect(()=>{
     getDisableName().then((res)=>tablesChanged({...tables,wait : res}))
-    setInterval(()=>{
+    let int_id = setInterval(()=>{
       getDisableName().then((res)=>tablesChanged({...tables,wait : res}))
     },60000)
+    return(()=>{clearInterval(int_id)})
   },[])
 
   useEffect(()=>{
-    cookies.set('login', 'test_user', { path: '/' });
+    cookies.set('login', 'test-user', { path: '/' });
   },[])
 
   const saveCSV = (e) =>{
-    let file = e.target.files[0]
-    //console.log(file);
-    addUpload(file.name).then( (res)=>{setTabs([...tabs,{
-      title : file.name.length > 10 ? (file.name.slice(0,9) + '...') : file.name,
-      fulnm : file.name,
-      type  : 'accept',
-      new   : 'true',
-      drop  : true,
-      file  : file,
-      res   : res
-    }])} ) 
+    let files = e.target.files
+    //console.log(files);
+    let len = files.length
+    for (let index = 0; index < len; index++) {
+      let file = files[0]
+      //console.log(file)
+      addUpload(file.name).then( (res)=>{setTabs([...tabs,{
+        title : file.name.length > 10 ? (file.name.slice(0,9) + '...') : file.name,
+        fulnm : file.name,
+        type  : 'accept',
+        new   : 'true',
+        drop  : true,
+        file  : file,
+        res   : res
+      }])} ) 
+    }
+    document.getElementById('fileLoader').value = ""
   }
 
   const addUpload = async (f_name) => {
@@ -193,7 +197,7 @@ const TablesList = ({tabs,setTabs,tables, tablesChanged}) => {
 
   const renderDisableItem = (item, i) => {
     return(
-      <Fragment key={`${item.name}_${i}`}>
+      <Fragment key={`${item.name}`}>
         <Item>
           <StListItemBlock  padding={`20px`}>
             <ListItemText> 

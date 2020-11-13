@@ -24,6 +24,16 @@ const upload = multer({ storage: storage }).fields([
 
 module.exports = function setup(app) {
 
+  app.get('/api/updateAllTables', async(req,res)=>{
+    try {
+      const updateAllTables = require('./requests/updateAllTables')
+      await updateAllTables(req,res)
+      res.send({status : 'ok'})
+    } catch(err) {
+      res.send({status : 'error', place : 'updateAllTables'})
+    }
+  })
+
   app.get('/api/getMainInfo', async (req, res) => {
     const getMainInfo = require('./requests/getMainInfo');
     const mainInfo = await getMainInfo(req, res);
@@ -61,6 +71,11 @@ module.exports = function setup(app) {
         const { rows } = await client2.query(`
           SELECT name FROM smsuploadfileinfo WHERE id = ${req.body.id}`)
         let name = rows[0].name;
+
+      // Заголовок
+        let header_type = req.body.header_type
+        let header_name = req.body.header_name
+        console.log('HEADERS:::',header_name,header_type)
 
       //Копируем файл на сервер hadoop 
         await client2.query(`

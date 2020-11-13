@@ -4,7 +4,7 @@ const createDatabase = async (login, res) => {
 	try {
 		// Определяем имя БД
 		let tmp = login.split('-')
-		let db = 'userbase_' + (login === 'NON_LOGIN' ? 'default' : (tmp[0].toLowerCase() + tmp[1].toLowerCase()));
+		let db = 'userbase_' + (login === 'NON_LOGIN' ? 'default' : (tmp[0].toLowerCase() + '_' + tmp[1].toLowerCase()));
 		// Узнаем существующие БД
 		let {	databases } = await axiosGet(res, 'http://dad-proxy.consultant.ru/10.106.79.70:50111/templeton/v1/ddl/database/?user.name=admin')
 		// Проверяемя есть ли среди БД нужная нам ( если нет создаем)
