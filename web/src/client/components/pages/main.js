@@ -11,8 +11,7 @@ import TablesList from "./../tables-list";
 import History from "./../history";
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import Accept from '../acceptTab'
-import LineFileReader from 'line-file-reader';
+import Accept from '../acceptTab';
 
 const Root = styled.div`
   width: 100%;
@@ -106,17 +105,37 @@ const Main = ({tables, tablesChanged }) => {
     drop  : false
   }])
 
-  const getLine = async ( file  )=>{
-    const reader = new LineFileReader(file)
-    const async_iterator = reader.iterate('\n',4096)
+  const getChunk = async (reader) => {
+    return(reader.read())
+  }
+
+  const getLine = async ( file )=>{
+    let stream = file.stream()
+    let reader = stream.getReader()
+    const utf8Decoder = new TextDecoder("utf-8");
     let myLine = []
-    let count = 10;
-    for await (const line of async_iterator) {
-      count--;
-      myLine.push(line.split(', '))
-      if (count == 0) break;
+
+    while(true){
+      let chn = await getChunk(reader)
+      let lines = utf8Decoder.decode(chn.value).split('\n').filter((el)=>el!="")
+      for (let index = 0; index < lines.length; index++) {
+        if(myLine.length >= 10){
+          break;
+        } else {
+          let tmp = lines[index].split(',').filter((el)=>{
+            return(
+              el!="" && el!="\n" && el!=" "
+            )
+          })
+          console.log(tmp)
+          myLine.push(tmp)
+        }
+      }
+      if (myLine.length >= 10 || chn.done){
+        break;
+      }
     }
-    return await myLine
+    return myLine
   }
 
   const [value, setValue] = React.useState(0);
