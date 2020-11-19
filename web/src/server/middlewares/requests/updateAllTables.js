@@ -3,10 +3,12 @@ const updateAllTables = async (req, res) => {
   const { queryPg, client } = require('./../../services/pg');
   const moment = require('moment');
 
+  let data = [];
+
   const { databases } = await axiosGet(res, `http://10.106.79.70:50111/templeton/v1/ddl/database?user.name=admin`);
   for (let i = 0; i < databases.length; i++) {
     console.log(`${i+1} из ${databases.length} (${databases[i]})`);
-    let data = [];
+    
     const { tables } = await axiosGet(res, `http://10.106.79.70:50111/templeton/v1/ddl/database/${databases[i]}/table?user.name=admin`);
     for (let j = 0; j < tables.length; j++) {
       const { columns } = await axiosGet(res, `http://10.106.79.70:50111/templeton/v1/ddl/database/${databases[i]}/table/${tables[j]}?user.name=admin`);
@@ -15,6 +17,7 @@ const updateAllTables = async (req, res) => {
         columns
       });
     }
+
     const updateQuery = `
       DELETE FROM hive_manager.tables
       WHERE name = '${databases[i]}';

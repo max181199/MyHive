@@ -127,7 +127,7 @@ const Main = ({tables, tablesChanged }) => {
               el!="" && el!="\n" && el!=" "
             )
           })
-          console.log(tmp)
+          //console.log(tmp)
           myLine.push(tmp)
         }
       }

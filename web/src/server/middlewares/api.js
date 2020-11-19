@@ -84,17 +84,27 @@ module.exports = function setup(app) {
         //let result = await copyToHDFS(req.files['csv_file'][0].path,name)
         // Временное решение, тяжелое и не эффективное( для маленьких файлов сойдет)
           //await _ASYNC_SEND_FILE_(req.files['csv_file'][0].path,name) 
-
-      //Считаем, что наш файлик уже лежит на сервере и все хорошо) и имя его >>>
-        name = 'test_csv_1605187285246' // Магия ошибок 
+      
+      //!!!Считаем, что наш файлик уже лежит на сервере и все хорошо) и имя его >>>
+        name = 'test_csv_1605183710984' // Магия ошибок 
         
       //Проверяем на наличие схемы 
         await client2.query(`
           UPDATE smsuploadfileinfo SET state = 'Проверяем наличие БД' WHERE id = ${req.body.id};`)
         let { createDatabase } = require('./requests/createDatabase')  
         let databaseName = await createDatabase(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',res)
-      
-      //Пересоздаем таблицу( Аналогичной нет, поскольку существует аременная метка)
+  
+      //Создаем таблицу
+        await client2.query(`
+          UPDATE smsuploadfileinfo SET state = 'Создаем таблицу' WHERE id = ${req.body.id};`)
+        let { createTable } = require('./requests/createTable')
+        await createTable(header_type,header_name,req.cookies.login || req.signedCookies.login || 'NON_LOGIN',name,res)
+
+      // Заполняем таблицу данными
+        await client2.query(`
+          UPDATE smsuploadfileinfo SET state = 'Заполняем таблицу' WHERE id = ${req.body.id};`)
+        let { fillTable } = require('./requests/fillTable')
+        await fillTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',name)
 
       //Удаляем файл на сервере hdfs
         //let { deleteFromHDFS } = require('../services/deleteFromHDFS')
@@ -103,13 +113,24 @@ module.exports = function setup(app) {
       //Удаляем файл на устройстве
         await unlinkAsync(req.files['csv_file'][0].path)
 
+      //Обновляем данные о таблицах
+        await client2.query(`
+          UPDATE smsuploadfileinfo SET state = 'Обновялем список таблиц' WHERE id = ${req.body.id};`)
+        let updateUploadTable = require('./requests/updateUploadTable')
+        await updateUploadTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+
       //Архивируем запись о загруженных таблицах
-        const { rows : rw1 } = await client2.query(`
+        await client2.query(`
           UPDATE smsuploadfileinfo SET state = 'ok' WHERE id = ${req.body.id};`)
-      
+
       //Возвращаем ответ 
       res.send({ status: 'ok',name});
     } catch(err){
+      // Говорим пользователю, что произошла ошибка
+      await client2.query(`
+        UPDATE smsuploadfileinfo SET state = 'error' WHERE id = ${req.body.id};
+      `)
+      // Возвращаем данные об ошибках
       console.log("API_uploadCSV_ERROR",err)
       res.send({status : 'error'})
     }
@@ -144,6 +165,11 @@ module.exports = function setup(app) {
         cleanupProgress : result.status.cleanupProgress,
         percentComplete : result.percentComplete,
       }
+      if ( result.status.state == 'SUCCEEDED'){
+        const updateUserRequestTable = require('./requests/updateUserRequestTable')
+        await updateUserRequestTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+      }
+
       await client2.query(`
        UPDATE hive_request SET state = '${JSON.stringify(res_obj)}' WHERE job_id = '${job_id}';`)
       res.send({state : 'ok', status : res_obj})

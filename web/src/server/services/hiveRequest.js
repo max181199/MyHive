@@ -26,8 +26,6 @@ const hiveRequest = async (req) => {
                   client_protocol: TCLIService_types.TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V5
                 });
 
-                console.log("REQ:::",req)
-
                 const operation = await session.executeStatement(
                   req,
                   { runAsync : true }
