@@ -5,6 +5,14 @@ const tablesChanged = (payload) => {
   };
 };
 
+const tablesUpdate = (payload) => {
+  return {
+    type: 'TABLES_UPDATE',
+    payload: payload
+  };
+};
+
 export {
-  tablesChanged
+  tablesChanged,
+  tablesUpdate
 }

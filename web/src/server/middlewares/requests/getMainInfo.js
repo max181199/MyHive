@@ -1,5 +1,29 @@
+const MySort = (a,b) => {
+  
+  let reg_a = a.table.match(/_\d+?$/gi)
+  let reg_b = b.table.match(/_\d+?$/gi)
+  if ( reg_a != null && reg_b != null){
+    let int_a = parseInt(reg_a[0].replace(/_/gi,''))
+    let int_b = parseInt(reg_b[0].replace(/_/gi,''))
+    if (int_a < int_b) return 1; 
+    if (int_a == int_b) return 0; 
+    if (int_a > int_b) return -1;
+  }
+  if ( reg_a == null && reg_b == null){
+    if (a.table < b.table) return 1; 
+    if (a.table == b.table) return 0; 
+    if (a.table > b.table) return -1
+  }
+  if ( reg_a == null && reg_b != null){
+    return -1;
+  }
+  if ( reg_a != null && reg_b == null){
+    return 1;
+  }
+}
+
 const getMainInfo = async (req, res) => {
-  const { client } = require('./../../services/pg');
+  const { client,client2 } = require('./../../services/pg');
   let login = req.cookies.login || 'NPSP-MalakhovDA';
   if (login != 'admin') {
     login = login.replace(/-/g, '_').toLowerCase();
@@ -8,10 +32,15 @@ const getMainInfo = async (req, res) => {
   //For test
   //login = 'admin' ////// DELETE
 
+  const { rows } = await client2.query(`
+    SELECT name, state FROM smsuploadfileinfo WHERE state != 'ok' AND login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}' ORDER BY date DESC
+  `)
+
   let resData = {
     consultant: [],
     userbase: [],
-    uploaded: []
+    uploaded: [],
+    wait : rows || []
   }
   
   const consultantQuery = `
@@ -48,10 +77,15 @@ const getMainInfo = async (req, res) => {
         uploaded.push(table_obj)
       }
     }
-    resData.userbase = userbase
-    resData.uploaded = uploaded
+
+
+
+    resData.userbase = userbase.sort(MySort)
+    resData.uploaded = uploaded.sort(MySort)
   }
   
+  //console.log(resData)
+
   return resData;
 }
 

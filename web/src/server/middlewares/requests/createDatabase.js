@@ -16,7 +16,7 @@ const createDatabase = async (login, res) => {
 		} else {
 			let res = await hiveRequest(`CREATE DATABASE IF NOT EXISTS ${db}`)
 			console.log('CDQ:',res)
-			return (db)
+			return ({...res, db:db})
 		}
 	} catch (err) {
 		console.log('CREATE_DATABASE_ERROR:::', err)

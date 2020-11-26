@@ -31,21 +31,29 @@ const hiveRequest = async (req) => {
                   { runAsync : true }
                 );
 
-                await utils.waitUntilReady(operation, true, () => {});
+                await utils.waitUntilReady(operation, true, (error) => {'HIVE_REJECT_ERROR:::',error});
                 await utils.fetchAll(operation);
-                await operation.close();
 
                 const result = await utils.getResult(operation);
 
+                await operation.close();
                 await session.close();
                 await client.close();
 
-                resolve(result)
+                resolve({...result,status : 'ok'})
                 
+              }).catch( (err) => {
+                console.log('HIVE_REQUEST_ERROR-first_cath:::',err)
+                resolve({
+                    status : 'error',
+                    error : err,
+                    place : 'HIVE_REQUEST'
+                })
               })
             } catch(err) {
                 console.log('HIVE_REQUEST_ERROR:::',err)
-                reject({
+                resolve({
+                    status : 'error',
                     error : err,
                     place : 'HIVE_REQUEST'
                 })

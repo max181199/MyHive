@@ -7,7 +7,6 @@ const logger = require('./logger');
 const authFilter = require('./middlewares/auth-filter');
 const schedule = require('node-schedule')
 const updateConsultantTable = require('./middlewares/requests/updateConsultantTable')
-const updateUserRequestTable = require('./middlewares/requests/updateUserRequestTable')
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.HTTP_PORT = process.env.HTTP_PORT || 30007;

@@ -6,10 +6,10 @@ const fillTable = async (login,name) => {
   let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
   try{
     let loadQuery = `LOAD DATA INPATH '/user/admin/tmp/hive_upload_table/${name}' OVERWRITE INTO TABLE ${db}.${name}`
-    console.log('LQ:',loadQuery)
+    //console.log('LQ:',loadQuery)
     let res = await hiveRequest(loadQuery)
-    console.log('res_tmp',res)
-    return({status : 'ok'})  
+    console.log('LQ:',res)
+    return(res)  
   } catch(err) {
     console.log('FILL_TABLE_ERROR:::',err)
     return({status : 'error',place : 'FILL_TABLE'})

@@ -14,10 +14,12 @@ const updateTables = (state, action) => {
   }
 
   switch (action.type) {
-    
     case 'TABLES_CHANGED':
+
+      //console.log('REQ:',state.tables)
+
       return {
-        ...state.settings,
+        ...state.tables,
         ...action.payload
       };
  

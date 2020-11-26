@@ -85,7 +85,7 @@ const _ASYNC_SEND_FILE_ = (path,name) => {
             })
           } else {
             console.log('_ASYNC_SEND_FILE_ALL_TIMEOUT_:::',result)
-            reject({
+            resolve({
               status : 'error',
               place : '_ASYNC_SEND_FILE_'
             })

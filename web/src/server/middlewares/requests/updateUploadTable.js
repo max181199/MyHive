@@ -22,19 +22,23 @@ const updateUploadTable = async (login) => {
         SELECT describe FROM hive_manager.tables
         WHERE name = '${databases[i]}';
       `;
-      old_data = (await client.query(getOldData))['rows'][0]['describe']
-      old_data = JSON.parse(old_data)
-      old_data.forEach(dt => {
-        //console.log('DT:',dt)
-        if (dt['table'].startsWith('report_')){
-          data.push(dt)
-        }
-      });
+      let tmp = await client.query(getOldData)
+      tmp = tmp['rows']
+      if ( tmp.length !== 0 ){
+        old_data = tmp[0]['describe']
+        old_data = JSON.parse(old_data)
+        old_data.forEach(dt => {
+          //console.log('DT:',dt)
+          if (dt['table'].startsWith('report_')){
+            data.push(dt)
+          }
+        });
+      }
 
       let { tables } = await _axiosGet('SAINT_ASONIA', `http://10.106.79.70:50111/templeton/v1/ddl/database/${databases[i]}/table?user.name=admin`);
       tables = tables.filter((name)=>(!name.startsWith('report_')))
       for (let j = 0; j < tables.length; j++) {
-        console.log('\t',`${j+1} из ${tables.length} (${tables[i]})`)
+        console.log('\t',`${j+1} из ${tables.length} (${tables[j]})`)
         const { columns } = await _axiosGet('METALICA', `http://10.106.79.70:50111/templeton/v1/ddl/database/${databases[i]}/table/${tables[j]}?user.name=admin`);
         data.push({
           table: tables[j],

@@ -122,7 +122,7 @@ const Main = ({tables, tablesChanged }) => {
         if(myLine.length >= 10){
           break;
         } else {
-          let tmp = lines[index].split(',').filter((el)=>{
+          let tmp = lines[index].split('\t').filter((el)=>{
             return(
               el!="" && el!="\n" && el!=" "
             )
@@ -148,15 +148,14 @@ const Main = ({tables, tablesChanged }) => {
   useEffect(() => {
     (async () => {
       const tables = await getQuery('/getMainInfo');
-      //console.log('TABLES:::',tables)
-      tablesChanged({...tables,wait : []});
+      tablesChanged(tables);
       setLoading(false);
     })()
     let int_id = setInterval( async ()=>{
       const data = await getQuery('/getMainInfo');
       //console.log('EXUXUX::',data)
-      tablesChanged({...tables,...data});
-    },60000)
+      tablesChanged(data);
+    },20000)
     getJobs()
     return(()=>{clearInterval(int_id)})
   }, []);

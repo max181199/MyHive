@@ -21,14 +21,17 @@ const createTable = async ( header_type, header_name, login, table_name, res ) =
     `CREATE EXTERNAL TABLE IF NOT EXISTS ${db}.${table_name}
       (${column})
       ROW FORMAT DELIMITED 
-      FIELDS TERMINATED BY '\\t'
+      FIELDS TERMINATED BY '\t'
+      LINES TERMINATED BY '\n'
       STORED AS TEXTFILE  
     `
-    console.log('CTQ:::',createTableQuery)
-
+    
     let res = await hiveRequest(createTableQuery)
 
-    return {status: 'ok'};
+    console.log('CTQ:::',res)
+
+
+    return res;
   } catch(err) {
     console.log('CREATE_TABLE_ERROR:::',err)
     return {status: 'error', place : 'CREATE_TABLE'};
