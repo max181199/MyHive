@@ -10,9 +10,9 @@ const MySort = (a,b) => {
     if (int_a > int_b) return -1;
   }
   if ( reg_a == null && reg_b == null){
-    if (a.table < b.table) return 1; 
+    if (a.table > b.table) return 1; 
     if (a.table == b.table) return 0; 
-    if (a.table > b.table) return -1
+    if (a.table < b.table) return -1
   }
   if ( reg_a == null && reg_b != null){
     return -1;

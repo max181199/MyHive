@@ -21,7 +21,11 @@ import { ListSubheader } from '@material-ui/core';
 import { getQuery } from '../services/query-service';
 import CloseIcon from '@material-ui/icons/Close';
 import moment from 'moment';
-import Badge from '@material-ui/core/Badge';
+
+import { FormControl } from '@material-ui/core';
+import { Input } from '@material-ui/core';
+import CheckIcon from '@material-ui/icons/Check';
+import ClearIcon from '@material-ui/icons/Clear';
 
 const Root = styled.div`
   width: 100%;
@@ -128,6 +132,15 @@ const TableName = styled.span`
   overflow : hidden;
 `
 
+
+const TableName_upd = styled.span`
+  padding-left : 6px;
+  margin-right : 4px;
+  white-space: nowrap;
+  display : flex;
+  overflow : hidden;
+`
+
 const ErrorPlace = styled.div`
   background-color : rgba(200,200,200,0.1);
   width : calc(100% - 40px);
@@ -147,9 +160,19 @@ const DropIconButton = styled(IconButton)`
   color : ${props=>props.clr};
 `;
 
+const RenameDiv = styled.div`
+  width : 100%;
+  padding : 0;
+  flex-grow : 1;
+`;
+
+const RenameFormControl=styled(FormControl)`
+ width : ${props=>props.wd};
+ margin-right : 0px;`;  
+
 const cookies = new Cookies();
 
-const TablesList = ({tabs,setTabs,tables, tablesChanged}) => {
+const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
   const [menu, onMenuChange] = useState({});
   const setMenu = (name) => {
     onMenuChange({
@@ -157,12 +180,57 @@ const TablesList = ({tabs,setTabs,tables, tablesChanged}) => {
       [name]: (menu[name] == undefined) ? true : !menu[name] 
     });
   }
-  const [deletingTable, setDeletingTable ] = useState([]);
-  //console.log('deleting:',deletingTable)
+
+  // Для правильной работы необходимо восстановить 
+  // все 4 массива после обновления страницы
+  // и бекапить их на сервер
+  // иначе после перезагрузки страницы мы потеряем данные об обновляемах
+  // таблицах ( печалька)
+  const [deletingTable, setDeletingTable ] = useState( actualTables!= null? JSON.parse(alterData.deletingtable):[]);
+  const [renameTables, setRenameTables ] = useState(actualTables!= null?JSON.parse(alterData.renametables):[]);
+  const [actualTables, setActualTables ] = useState(actualTables!= null?JSON.parse(alterData.actualtables):[]);
+  const [usedNames, setUsedNames ] = useState(actualTables!= null?JSON.parse(alterData.usednames):[]);
+  // Будем загружать их из бд, при запуске странцы
+  // Бэкапить при их изменениях с помощью ассинхронных запросов
+
+
+
+  const [newName , setNewName ] = useState({});
+  const updatenNewName = (name) => {
+    setNewName({
+      ...newName,
+      [name] : ( newName[name]== undefined ) ? name : undefined
+    })
+  }  
+  const rewriteNewName = (name,str) => {
+    setNewName({
+      ...newName,
+      [name] : str
+    })
+  }
+
+  const closeRename = (name) => {
+    setNewName({
+      ...newName,
+      [name] : undefined
+    })
+  }
 
   useEffect(()=>{
     cookies.set('login', 'test-user', { path: '/' });
   },[])
+
+  useEffect(()=>{
+    let tmp = [];
+    tables.uploaded.forEach(el => {
+      tmp.push(el.table);
+    });
+    setDeletingTable(deletingTable.filter((el)=>tmp.includes(el)))
+    setRenameTables(renameTables.filter((el)=>tmp.includes(el)))
+    setActualTables(tmp)
+    setUsedNames(usedNames.filter((el)=>!tmp.includes(el)))
+  },[tables]);
+
 
   const saveCSV = (e) =>{
     let files = e.target.files
@@ -198,7 +266,16 @@ const TablesList = ({tabs,setTabs,tables, tablesChanged}) => {
   }
 
   const dropTable = async ( name ) => {
-    await getQuery('/dropTable',{name})
+    if ( !deletingTable.includes(name) ){
+      await getQuery('/dropTable',{name})
+      const data = await getQuery('/getMainInfo');
+      tablesChanged(data);
+    }
+  }
+
+  const renameTable = async( name , newn ) => {
+    console.log('Here')
+    await getQuery('/renameTable',{old_name : name,new_name : newn})
     const data = await getQuery('/getMainInfo');
     tablesChanged(data);
   }
@@ -208,40 +285,117 @@ const TablesList = ({tabs,setTabs,tables, tablesChanged}) => {
     return(
       <Fragment key={`${item.table}_${i}`}>
         <Item>
-          <MyListItemBlock padding={`20px`} onClick={() => setMenu(item.table)}>
+          <MyListItemBlock key={item.table + 'MyListItemBlock'} padding={`20px`} onClick={() => setMenu(item.table)}>
             {menu[item.table] ? <ExpandLess /> : <ExpandMore />}
-            <ListItemText>
+            <ListItemText key={item.table + 'ListItemText'}>
               <Tooltip title={item.table} enterDelay={1000} enterNextDelay={1000}>
-                <TableName>
+                <TableName key={'table_name_' + item.table} id={'table_name_' + item.table}>
                   {item.table}
                 </TableName>
               </Tooltip>  
             </ListItemText>
             {
               (name != 'consultant') ?
-              <SettingsOne>
+              <SettingsOne key={'table_name_SettingsOne_' + item.table} >
                 {
                   (!deletingTable.includes(item.table))
                   ?
                     <Tooltip title="Переименовать">
-                      <IconButton size="small">
+                      <DropIconButton  clr={renameTables.includes(item.table)?'#ffc107':newName[item.table]==undefined?'grey':'#1e88e5'} onClick={(e)=>{e.preventDefault();e.stopPropagation(); renameTables.includes(item.table)?null:updatenNewName(item.table)}} size="small">
                         <EditIcon />
-                      </IconButton>
+                      </DropIconButton>
                     </Tooltip>
                   :
                   null
                 }
-                <Tooltip title="Удалить таблицу" onClick={(e)=>{setDeletingTable([...deletingTable,item.table]);e.preventDefault();e.stopPropagation();dropTable(item.table)}}>
-                  <DropIconButton size="small" clr={deletingTable.includes(item.table)?'#ffc107':'grey' }>
-                    <DeleteOutlineIcon />
-                  </DropIconButton>
-                </Tooltip>
+                {
+                  (!renameTables.includes(item.table))
+                  ?
+                  <Tooltip title="Удалить таблицу">
+                    <DropIconButton onClick={(e)=>{deletingTable.includes(item.table)?null:setDeletingTable([...deletingTable,item.table]);e.preventDefault();e.stopPropagation();dropTable(item.table)}} size="small" clr={deletingTable.includes(item.table)?'#ffc107':'grey' }>
+                      <DeleteOutlineIcon />
+                    </DropIconButton>
+                  </Tooltip>
+                  :
+                  null
+                }
               </SettingsOne> : null
             }
           </MyListItemBlock>
-          
         </Item>
-        <Collapse in={menu[item.table]} timeout="auto">
+        {
+          ((newName[item.table] == undefined) || (deletingTable.includes(item.table)) || (renameTables.includes(item.table)) )
+          ?
+          null
+          :
+          <MyListItemBlock button={false} key={`${item.table}rename`} padding={`44px`}>
+            <TableName_upd key={item.table + 'TNIN'} >
+              <RenameDiv key={item.table + 'DV'} >
+                <RenameFormControl key={item.table + 'RFM'} wd={document.getElementById('table_name_' + item.table) !== null ? document.getElementById('table_name_' + item.table).clientWidth + 'px' : '0px'}>
+                  <Input key={item.table + 'INP'}  value={newName[item.table]} onChange={
+                    (e)=>{
+                      e.stopPropagation();
+                      e.preventDefault();
+                      rewriteNewName(item.table,e.target.value)
+                    }} 
+                  />
+                </RenameFormControl>
+              </RenameDiv>
+            </TableName_upd>
+              <SettingsOne key={item.table + 'SO'} >
+                {
+                  ( 
+                    (newName[item.table] != '') && 
+                    (!actualTables.includes(newName[item.table])) &&
+                    (!usedNames.includes(newName[item.table]))
+                  )
+                  ?
+                  <Tooltip title='Отправить' onClick={
+                    (e)=>{
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      renameTables.includes(item.table)
+                      ?
+                      null
+                      :
+                      setUsedNames([...usedNames,newName[item.table]])
+
+                      renameTables.includes(item.table)
+                      ?
+                      null
+                      :
+                      renameTable(item.table,newName[item.table])
+
+                      renameTables.includes(item.table)
+                      ?
+                      null
+                      :
+                      setRenameTables([...renameTables,item.table])
+                    }}
+                  >
+                    <DropIconButton size="small" clr='grey'>
+                      <CheckIcon/>
+                    </DropIconButton>
+                  </Tooltip>
+                  :
+                  null
+                }
+                <Tooltip title='Отменить'>
+                  <DropIconButton onClick={(e)=>{
+                      e.preventDefault();
+                      e.stopPropagation();
+                      closeRename(item.table)}
+                    }
+                    size='small' clr='grey'
+                  >
+                    <ClearIcon/>
+                  </DropIconButton>
+                </Tooltip>
+              </SettingsOne>
+          </MyListItemBlock>
+        }
+        <Collapse key={'collapse_' + item.table} in={menu[item.table]} timeout="auto">
         {
           item.columns.map((column, k) => {
             return(

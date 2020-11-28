@@ -25,6 +25,38 @@ const upload = multer({ storage: storage }).fields([
 
 module.exports = function setup(app) {
 
+  app.get('/api/getAlterTableInfo',async(req,res)=>{
+    try{
+      let login = req.cookies.login || req.signedCookies.login || 'NON_LOGIN';
+      if (login != 'admin') {
+        login = login.replace(/-/g, '_').toLowerCase();
+      }
+      let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login); 
+
+      let { rows }= await client2.query(` SELECT deletingTable,renameTables,actualTables,usedNames FROM altertableinfo WHERE db='${db}'`)
+      if ( rows.length == 0 ){
+        await client2.query(`
+          INSERT INTO altertableinfo (db,deletingTable,renameTables,actualTables,usedNames)
+          VALUES ('${db}','${JSON.stringify([])}','${JSON.stringify([])}','${JSON.stringify([])}','${JSON.stringify([])}')
+        `)
+        res.send({
+          status : 'ok',
+          data : {
+            deletingTable : JSON.stringify([]),
+            renameTables : JSON.stringify([]),
+            actualTables : JSON.stringify([]),
+            usedNames : JSON.stringify([]),
+          }
+        })
+      } else {
+        res.send({status : 'ok' , data : rows[0]  })
+      }
+    } catch (err) {
+      console.log('API_GET_ALTER_TABEL_INFO_ERROR:::',err)
+      res.send({status : 'error' , place : 'API_GET_ALTER_TABEL_INFO'})
+    }
+  })
+
   app.get('/api/foggot_error',async(req,res)=>{
     try {
       client2.query(`
@@ -80,6 +112,23 @@ module.exports = function setup(app) {
       })
     }
   })
+
+  app.get('/api/renameTable', async(req,res)=>{
+    try{
+      let {renameTable} = require('./requests/renameTable')
+      await renameTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',req.query.old_name,req.query.new_name)
+      let updateUploadTable = require('./requests/updateUploadTable')
+      await updateUploadTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+      res.send({status : 'ok'})
+    } catch (err){
+      console.log('API_RENAME_TABLE_ERROR:::',err)
+      res.send({
+        status : 'error',
+        place : 'API_RENAME_TABLE'
+      })
+    }
+  })
+
 
   app.post('/api/uploadCSV', upload, async (req, res) => {
     try{

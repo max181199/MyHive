@@ -144,11 +144,15 @@ const Main = ({tables, tablesChanged }) => {
   const [header_type,set_header_type ] = useState([]) 
   const [columns,setColumns] = useState([[]])
   const [accError,setAccError] = useState(false)
+  const [alterData,setAlterData] = useState(null)
 
   useEffect(() => {
     (async () => {
       const tables = await getQuery('/getMainInfo');
       tablesChanged(tables);
+      const tabel_alter_data = await getQuery('/getAlterTableInfo')
+      setAlterData(tabel_alter_data.data)
+      console.log('TEST:::',tabel_alter_data)
       setLoading(false);
     })()
     let int_id = setInterval( async ()=>{
@@ -232,7 +236,7 @@ const Main = ({tables, tablesChanged }) => {
         <>
         <Tables>
           <Title><TitleText>Таблицы</TitleText></Title>
-          <TablesList tabs={tabs} setTabs={setTabs} />
+          <TablesList tabs={tabs} alterData={alterData} setTabs={setTabs} />
         </Tables>
         <Editor >
           <StTabs

@@ -8,7 +8,6 @@ const dropTable = async ( login , table_name ) => {
 
   try {
     let dropRequest = `DROP TABLE IF EXISTS ${db}.${table_name}`
-    console.log('mimimi:',dropRequest);
     let res = await hiveRequest(dropRequest)
     console.log('DR:',res)
     return(res)

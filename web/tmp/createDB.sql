@@ -14,3 +14,13 @@ CREATE TABLE IF NOT EXISTS smsuploadfileinfo (
     state TEXT,
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS altertableinfo (
+    id SERIAL PRIMARY KEY,
+    db TEXT,
+    deletingTable TEXT,
+    renameTables TEXT,
+    actualTables TEXT,
+    usedNames TEXT,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
