@@ -186,12 +186,11 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
   // и бекапить их на сервер
   // иначе после перезагрузки страницы мы потеряем данные об обновляемах
   // таблицах ( печалька)
-  const [deletingTable, setDeletingTable ] = useState( actualTables!= null? JSON.parse(alterData.deletingtable):[]);
-  const [renameTables, setRenameTables ] = useState(actualTables!= null?JSON.parse(alterData.renametables):[]);
-  const [actualTables, setActualTables ] = useState(actualTables!= null?JSON.parse(alterData.actualtables):[]);
-  const [usedNames, setUsedNames ] = useState(actualTables!= null?JSON.parse(alterData.usednames):[]);
-  // Будем загружать их из бд, при запуске странцы
-  // Бэкапить при их изменениях с помощью ассинхронных запросов
+  const [deletingTable, setDeletingTable ] = useState( alterData!= null? JSON.parse(alterData.deletingTable):[]);
+  const [renameTables, setRenameTables ] = useState(alterData!= null?JSON.parse(alterData.renameTables):[]);
+  const [actualTables, setActualTables ] = useState(alterData!= null?JSON.parse(alterData.actualTables):[]);
+  const [usedNames, setUsedNames ] = useState(alterData!= null?JSON.parse(alterData.usedNames):[]);
+  
 
 
 

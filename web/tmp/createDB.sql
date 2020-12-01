@@ -18,9 +18,7 @@ CREATE TABLE IF NOT EXISTS smsuploadfileinfo (
 CREATE TABLE IF NOT EXISTS altertableinfo (
     id SERIAL PRIMARY KEY,
     db TEXT,
-    deletingTable TEXT,
-    renameTables TEXT,
-    actualTables TEXT,
-    usedNames TEXT,
+    oldname TEXT,
+    newname TEXT,
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )

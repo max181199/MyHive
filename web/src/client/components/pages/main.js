@@ -151,6 +151,7 @@ const Main = ({tables, tablesChanged }) => {
       const tables = await getQuery('/getMainInfo');
       tablesChanged(tables);
       const tabel_alter_data = await getQuery('/getAlterTableInfo')
+      tabel_alter_data.data.actualTables = JSON.stringify(tables.uploaded.map(el=>el.table))
       setAlterData(tabel_alter_data.data)
       console.log('TEST:::',tabel_alter_data)
       setLoading(false);

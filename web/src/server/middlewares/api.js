@@ -33,27 +33,46 @@ module.exports = function setup(app) {
       }
       let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login); 
 
-      let { rows }= await client2.query(` SELECT deletingTable,renameTables,actualTables,usedNames FROM altertableinfo WHERE db='${db}'`)
-      if ( rows.length == 0 ){
-        await client2.query(`
-          INSERT INTO altertableinfo (db,deletingTable,renameTables,actualTables,usedNames)
-          VALUES ('${db}','${JSON.stringify([])}','${JSON.stringify([])}','${JSON.stringify([])}','${JSON.stringify([])}')
-        `)
-        res.send({
-          status : 'ok',
+      let _deletingTable = []
+      let _renameTables = []
+      let _usedNames = []
+
+      // Таблицы, которые удаляются (DeletingTable) :
+      let { rows } = await client2.query(` SELECT oldname FROM altertableinfo WHERE db='${db}' AND newname = ''`)
+      if ( rows.length != 0 ){
+        _deletingTable = rows.map(el=>el.oldname);
+        console.log("OTL__deletingTable:",_deletingTable);
+      }
+      // Таблицы которые переименовываются (RenameTables)
+      let { rows : rows1 } = await client2.query(` SELECT oldname FROM altertableinfo WHERE db='${db}' AND newname != ''`)
+      if ( rows1.length != 0 ){
+        _renameTables = rows1.map(el=>el.oldname);
+        console.log("OTL__renameTables:",_renameTables);
+      }
+      // Имена которые заняты для переимонавания
+      let { rows : rows2} = await client2.query(` SELECT newname FROM altertableinfo WHERE db='${db}' AND newname != ''`)
+      if ( rows2.length != 0 ){
+        _usedNames = rows2.map(el=>el.newname);
+        console.log("OTL__usedNames:",_usedNames);
+      }
+      // Отправляем данные на фронт
+      res.send({
+          status : 'ok', 
+          data : {
+            deletingTable : JSON.stringify(_deletingTable),
+            renameTables : JSON.stringify(_renameTables),
+            usedNames : JSON.stringify(_usedNames),
+          }
+      })
+    } catch (err) {
+      console.log('API_GET_ALTER_TABEL_INFO_ERROR:::',err)
+      res.send({status : 'error' , place : 'API_GET_ALTER_TABEL_INFO' , 
           data : {
             deletingTable : JSON.stringify([]),
             renameTables : JSON.stringify([]),
-            actualTables : JSON.stringify([]),
             usedNames : JSON.stringify([]),
           }
-        })
-      } else {
-        res.send({status : 'ok' , data : rows[0]  })
-      }
-    } catch (err) {
-      console.log('API_GET_ALTER_TABEL_INFO_ERROR:::',err)
-      res.send({status : 'error' , place : 'API_GET_ALTER_TABEL_INFO'})
+      })
     }
   })
 
@@ -99,12 +118,30 @@ module.exports = function setup(app) {
 
   app.get('/api/dropTable', async(req,res)=>{
     try{
+      let login = req.cookies.login || req.signedCookies.login || 'NON_LOGIN';
+      if (login != 'admin') {
+        login = login.replace(/-/g, '_').toLowerCase();
+      }
+      let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
+      // Добавляем информацию об удаляемой таблице
+      await client2.query(`
+        INSERT INTO altertableinfo (db,oldname,newname)
+        VALUES ('${db}','${req.query.name}','');
+      `)
       let { dropTable } = require('./requests/dropTable')
       await dropTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',req.query.name)
       let updateUploadTable = require('./requests/updateUploadTable')
       await updateUploadTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+      // Считаем таблицу обновленной
+      await client2.query(`
+        DELETE FROM altertableinfo * WHERE oldname = '${req.query.name}';
+      `)
       res.send({status : 'ok'})
     } catch (err){
+      // Считаем что удаление завершилось не удачно
+      await client2.query(`
+        DELETE FROM altertableinfo * WHERE oldname = '${req.query.name}';
+      `)
       console.log('API_DROP_TABLE_ERROR:::',err)
       res.send({
         status : 'error',
@@ -115,12 +152,34 @@ module.exports = function setup(app) {
 
   app.get('/api/renameTable', async(req,res)=>{
     try{
+
+      let login = req.cookies.login || req.signedCookies.login || 'NON_LOGIN';
+      if (login != 'admin') {
+        login = login.replace(/-/g, '_').toLowerCase();
+      }
+      let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
+      // Добавляем информацию об переименовываемой таблице
+      await client2.query(`
+        INSERT INTO altertableinfo (db,oldname,newname)
+        VALUES ('${db}','${req.query.old_name}','${req.query.new_name}');
+      `)
+
       let {renameTable} = require('./requests/renameTable')
       await renameTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',req.query.old_name,req.query.new_name)
       let updateUploadTable = require('./requests/updateUploadTable')
       await updateUploadTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+
+      await client2.query(`
+        DELETE FROM altertableinfo * WHERE oldname = '${req.query.old_name}';
+      `)
+      
       res.send({status : 'ok'})
     } catch (err){
+
+      await client2.query(`
+        DELETE FROM altertableinfo * WHERE oldname = '${req.query.old_name}';
+      `)
+
       console.log('API_RENAME_TABLE_ERROR:::',err)
       res.send({
         status : 'error',
