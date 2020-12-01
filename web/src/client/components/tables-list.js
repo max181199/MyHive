@@ -190,10 +190,7 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
   const [renameTables, setRenameTables ] = useState(alterData!= null?JSON.parse(alterData.renameTables):[]);
   const [actualTables, setActualTables ] = useState(alterData!= null?JSON.parse(alterData.actualTables):[]);
   const [usedNames, setUsedNames ] = useState(alterData!= null?JSON.parse(alterData.usedNames):[]);
-  
-
-
-
+  const [ test , setTest ] = useState('')
   const [newName , setNewName ] = useState({});
   const updatenNewName = (name) => {
     setNewName({
@@ -273,7 +270,7 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
   }
 
   const renameTable = async( name , newn ) => {
-    console.log('Here')
+    //console.log('Here')
     await getQuery('/renameTable',{old_name : name,new_name : newn})
     const data = await getQuery('/getMainInfo');
     tablesChanged(data);
@@ -327,11 +324,11 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
           ?
           null
           :
-          <MyListItemBlock button={false} key={`${item.table}rename`} padding={`44px`}>
-            <TableName_upd key={item.table + 'TNIN'} >
-              <RenameDiv key={item.table + 'DV'} >
-                <RenameFormControl key={item.table + 'RFM'} wd={document.getElementById('table_name_' + item.table) !== null ? document.getElementById('table_name_' + item.table).clientWidth + 'px' : '0px'}>
-                  <Input key={item.table + 'INP'}  value={newName[item.table]} onChange={
+          <MyListItemBlock button={false} key={`${item.table}RENAME_PLACE`} padding={`44px`}>
+            <TableName_upd key={item.table + 'RIGHT_CUTTING'} >
+              <RenameDiv key={item.table + 'RENAME_DIV'} >
+                <RenameFormControl key={item.table + 'RENAME_FROM_CONTROLL'} wd={document.getElementById('table_name_' + item.table) !== null ? document.getElementById('table_name_' + item.table).clientWidth + 'px' : '0px'}>
+                  <Input key={item.table + 'INPUT_NEW_NAME'}  value={newName[item.table]} onChange={
                     (e)=>{
                       e.stopPropagation();
                       e.preventDefault();
@@ -394,11 +391,11 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
               </SettingsOne>
           </MyListItemBlock>
         }
-        <Collapse key={'collapse_' + item.table} in={menu[item.table]} timeout="auto">
+        <Collapse key={'column_collapse_' + item.table} in={menu[item.table]} timeout="auto">
         {
           item.columns.map((column, k) => {
             return(
-              <ListItemBlock key={`${i}_${k}`} padding={`40px`}>
+              <ListItemBlock key={`${item.table}_${column.name}_${column.type}`} padding={`40px`}>
                 <ListItemText>
                   <Tooltip title={`${column.name} (${column.type})`} enterDelay={1000} enterNextDelay={1000}>
                     <TableName>
@@ -534,8 +531,8 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
   } 
 
 	return (
-    <Root>
-      <ListItemBlock padding={`0px`} onClick={() => setMenu('consultant')}>
+    <Root key={'consultant_root'}>
+      <ListItemBlock key={'consultant_root_list_Item_block'} padding={`0px`} onClick={() => setMenu('consultant')}>
         {menu['consultant'] ? <ExpandLess /> : <ExpandMore />}
         <ListItemText>
           <Tooltip title="Consultant" enterDelay={1000} enterNextDelay={1000} >
@@ -545,7 +542,7 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
           </Tooltip>
         </ListItemText>
       </ListItemBlock>
-      <Collapse in={menu['consultant']} timeout="auto">
+      <Collapse key={'consultant_render_item_coolapse'} in={menu['consultant']} timeout="auto">
       {
         ( tables.consultant || []).map((item,i) => {
           return renderItem(item,i,'consultant')
@@ -553,7 +550,7 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
       }
       </Collapse>
 
-      <ListItemBlock
+      <ListItemBlock key={'report_item_block'}
         padding={`0px`}
         onClick={() => setMenu('userbase')}>
         {menu['userbase'] ? <ExpandLess /> : <ExpandMore />}
@@ -565,7 +562,7 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
           </Tooltip>
         </ListItemText>
       </ListItemBlock>
-      <Collapse in={menu['userbase']} timeout="auto">
+      <Collapse key={'report_collapse'} in={menu['userbase']} timeout="auto">
       {
         ( tables.userbase || [] ).length == 0 ?
           <EmptyList>
@@ -585,8 +582,8 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
       }
       </Collapse>
 
-      <Item>
-        <ListItemBlock
+      <Item key={'uploaded_Item'} >
+        <ListItemBlock key={'uploaded_item_block'}
           padding={`0px`}
           onClick={() => setMenu('uploaded')}>
           {menu['uploaded'] ? <ExpandLess /> : <ExpandMore />}
@@ -616,7 +613,7 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
           </Settings>
         </ListItemBlock> 
       </Item>
-      <Collapse in={menu['uploaded']} timeout="auto">
+      <Collapse key={'uploaded_collaps'} in={menu['uploaded']} timeout="auto">
         <ListItemBlock key={'wait'} padding={`20px`} onClick={() => setMenu('wait')}>
           {menu['wait'] ? <ExpandLess /> : <ExpandMore />}
           <ListItemText>

@@ -41,19 +41,19 @@ module.exports = function setup(app) {
       let { rows } = await client2.query(` SELECT oldname FROM altertableinfo WHERE db='${db}' AND newname = ''`)
       if ( rows.length != 0 ){
         _deletingTable = rows.map(el=>el.oldname);
-        console.log("OTL__deletingTable:",_deletingTable);
+        //console.log("OTL__deletingTable:",_deletingTable);
       }
       // Таблицы которые переименовываются (RenameTables)
       let { rows : rows1 } = await client2.query(` SELECT oldname FROM altertableinfo WHERE db='${db}' AND newname != ''`)
       if ( rows1.length != 0 ){
         _renameTables = rows1.map(el=>el.oldname);
-        console.log("OTL__renameTables:",_renameTables);
+        //console.log("OTL__renameTables:",_renameTables);
       }
       // Имена которые заняты для переимонавания
       let { rows : rows2} = await client2.query(` SELECT newname FROM altertableinfo WHERE db='${db}' AND newname != ''`)
       if ( rows2.length != 0 ){
         _usedNames = rows2.map(el=>el.newname);
-        console.log("OTL__usedNames:",_usedNames);
+        //console.log("OTL__usedNames:",_usedNames);
       }
       // Отправляем данные на фронт
       res.send({
