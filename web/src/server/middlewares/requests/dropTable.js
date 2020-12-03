@@ -1,5 +1,6 @@
 const dropTable = async ( login , table_name ) => {
   const {	hiveRequest } = require('./../../services/hiveRequest');
+  const {deleteTableDataFromHDFS} = require('./../../services/deleteTableDataFromHive')
   
   if (login != 'admin') {
     login = login.replace(/-/g, '_').toLowerCase();
@@ -9,7 +10,8 @@ const dropTable = async ( login , table_name ) => {
   try {
     let dropRequest = `DROP TABLE IF EXISTS ${db}.${table_name}`
     let res = await hiveRequest(dropRequest)
-    console.log('DR:',res)
+    let drop = await deleteTableDataFromHDFS(db,table_name)
+    console.log('DR:',res,drop)
     return(res)
   } catch (err) {
     console.log('DROP_TABLE_ERROR:::',err)

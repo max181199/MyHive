@@ -38,7 +38,7 @@ const updateUserRequestTable = async (login) => {
       let { tables } = await _axiosGet('SAINT_ASONIA', `http://10.106.79.70:50111/templeton/v1/ddl/database/${databases[i]}/table?user.name=admin`);
       tables = tables.filter((name)=>name.startsWith('report_'))
       for (let j = 0; j < tables.length; j++) {
-        console.log('\t',`${j+1} из ${tables.length} (${tables[i]})`)
+        console.log('\t',`${j+1} из ${tables.length} (${tables[j]})`)
         const { columns } = await _axiosGet('METALICA', `http://10.106.79.70:50111/templeton/v1/ddl/database/${databases[i]}/table/${tables[j]}?user.name=admin`);
         data.push({
           table: tables[j],
@@ -54,7 +54,6 @@ const updateUserRequestTable = async (login) => {
         VALUES ('${databases[i]}', '${JSON.stringify(data)}', '${moment().format()}');
       `;
 
-      //console.log('DATA:::',updateQuery)
 
       await client.query(updateQuery);
     }

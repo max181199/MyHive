@@ -30,6 +30,7 @@ import ClearIcon from '@material-ui/icons/Clear';
 const Root = styled.div`
   width: 100%;
   height: 100vh;
+  overflow-y : auto;
 `;
 const EmptyList = styled(Typography)`
   width: 100%;
@@ -188,7 +189,7 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
   // таблицах ( печалька)
   const [deletingTable, setDeletingTable ] = useState( alterData!= null? JSON.parse(alterData.deletingTable):[]);
   const [renameTables, setRenameTables ] = useState(alterData!= null?JSON.parse(alterData.renameTables):[]);
-  const [actualTables, setActualTables ] = useState(alterData!= null?JSON.parse(alterData.actualTables):[]);
+  const [actualTables, setActualTables ] = useState([]);
   const [usedNames, setUsedNames ] = useState(alterData!= null?JSON.parse(alterData.usedNames):[]);
   const [ test , setTest ] = useState('')
   const [newName , setNewName ] = useState({});
@@ -219,6 +220,9 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
   useEffect(()=>{
     let tmp = [];
     tables.uploaded.forEach(el => {
+      tmp.push(el.table);
+    });
+    tables.userbase.forEach(el => {
       tmp.push(el.table);
     });
     setDeletingTable(deletingTable.filter((el)=>tmp.includes(el)))
@@ -261,17 +265,17 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
     tablesChanged(data);
   }
 
-  const dropTable = async ( name ) => {
+  const dropTable = async ( name , db ) => {
     if ( !deletingTable.includes(name) ){
-      await getQuery('/dropTable',{name})
+      await getQuery('/dropTable',{name , dbase : db})
       const data = await getQuery('/getMainInfo');
       tablesChanged(data);
     }
   }
 
-  const renameTable = async( name , newn ) => {
+  const renameTable = async( name , newn ,db ) => {
     //console.log('Here')
-    await getQuery('/renameTable',{old_name : name,new_name : newn})
+    await getQuery('/renameTable',{old_name : name,new_name : newn , dbase : db})
     const data = await getQuery('/getMainInfo');
     tablesChanged(data);
   }
@@ -308,7 +312,7 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
                   (!renameTables.includes(item.table))
                   ?
                   <Tooltip title="Удалить таблицу">
-                    <DropIconButton onClick={(e)=>{deletingTable.includes(item.table)?null:setDeletingTable([...deletingTable,item.table]);e.preventDefault();e.stopPropagation();dropTable(item.table)}} size="small" clr={deletingTable.includes(item.table)?'#ffc107':'grey' }>
+                    <DropIconButton onClick={(e)=>{deletingTable.includes(item.table)?null:setDeletingTable([...deletingTable,item.table]);e.preventDefault();e.stopPropagation();dropTable(item.table,name)}} size="small" clr={deletingTable.includes(item.table)?'#ffc107':'grey' }>
                       <DeleteOutlineIcon />
                     </DropIconButton>
                   </Tooltip>
@@ -361,7 +365,7 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
                       ?
                       null
                       :
-                      renameTable(item.table,newName[item.table])
+                      renameTable(item.table,newName[item.table],name)
 
                       renameTables.includes(item.table)
                       ?

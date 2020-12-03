@@ -152,23 +152,24 @@ const Main = ({tables, tablesChanged }) => {
       const tables = await getQuery('/getMainInfo');
       tablesChanged(tables);
       const tabel_alter_data = await getQuery('/getAlterTableInfo')
-      tabel_alter_data.data.actualTables = JSON.stringify(tables.uploaded.map(el=>el.table))
       setAlterData(tabel_alter_data.data)
       //console.log('TEST:::',tabel_alter_data)
       setLoading(false);
     })()
+    getJobs()
     let int_id = setInterval( async ()=>{
       const data = await getQuery('/getMainInfo');
-      //console.log('EXUXUX::',data)
       tablesChanged(data);
     },20000)
-    getJobs()
-    return(()=>{clearInterval(int_id)})
+    let int_id_jobs = setInterval( async ()=>{
+      getJobs()
+    },10000)
+    
+    return(()=>{clearInterval(int_id);clearInterval(int_id_jobs)})
   }, []);
 
  
   const getJobs = () => {
-    set_jobs([])
     getQuery('/get_jobs').then((data) => {
       //console.log('FRONT_GET_JOBS_DATA:::', data)
       if (data.state == 'ok') {

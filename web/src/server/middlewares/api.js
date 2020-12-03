@@ -40,19 +40,19 @@ module.exports = function setup(app) {
       // Таблицы, которые удаляются (DeletingTable) :
       let { rows } = await client2.query(` SELECT oldname FROM altertableinfo WHERE db='${db}' AND newname = ''`)
       if ( rows.length != 0 ){
-        _deletingTable = rows.map(el=>el.oldname);
+        _deletingTable = rows.map(el=>el.oldname.replace(/^report_/,''));
         //console.log("OTL__deletingTable:",_deletingTable);
       }
       // Таблицы которые переименовываются (RenameTables)
       let { rows : rows1 } = await client2.query(` SELECT oldname FROM altertableinfo WHERE db='${db}' AND newname != ''`)
       if ( rows1.length != 0 ){
-        _renameTables = rows1.map(el=>el.oldname);
+        _renameTables = rows1.map(el=>el.oldname.replace(/^report_/,''));
         //console.log("OTL__renameTables:",_renameTables);
       }
       // Имена которые заняты для переимонавания
       let { rows : rows2} = await client2.query(` SELECT newname FROM altertableinfo WHERE db='${db}' AND newname != ''`)
       if ( rows2.length != 0 ){
-        _usedNames = rows2.map(el=>el.newname);
+        _usedNames = rows2.map(el=>el.newname.replace(/^report_/,''));
         //console.log("OTL__usedNames:",_usedNames);
       }
       // Отправляем данные на фронт
@@ -123,24 +123,30 @@ module.exports = function setup(app) {
         login = login.replace(/-/g, '_').toLowerCase();
       }
       let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
+      let real_name = req.query.dbase == 'userbase' ? 'report_' + req.query.name : req.query.name;
       // Добавляем информацию об удаляемой таблице
       await client2.query(`
         INSERT INTO altertableinfo (db,oldname,newname)
-        VALUES ('${db}','${req.query.name}','');
+        VALUES ('${db}','${real_name}','');
       `)
       let { dropTable } = require('./requests/dropTable')
-      await dropTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',req.query.name)
-      let updateUploadTable = require('./requests/updateUploadTable')
-      await updateUploadTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+      await dropTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',real_name)
+      if (req.query.dbase == 'userbase'){
+        let updateUserRequestTable = require('./requests/updateUserRequestTable')
+        await updateUserRequestTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+      } else {
+        let updateUploadTable = require('./requests/updateUploadTable')
+        await updateUploadTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+      }
       // Считаем таблицу обновленной
       await client2.query(`
-        DELETE FROM altertableinfo * WHERE oldname = '${req.query.name}';
+        DELETE FROM altertableinfo * WHERE oldname = '${real_name}';
       `)
       res.send({status : 'ok'})
     } catch (err){
       // Считаем что удаление завершилось не удачно
       await client2.query(`
-        DELETE FROM altertableinfo * WHERE oldname = '${req.query.name}';
+        DELETE FROM altertableinfo * WHERE oldname = '${real_name}';
       `)
       console.log('API_DROP_TABLE_ERROR:::',err)
       res.send({
@@ -158,26 +164,33 @@ module.exports = function setup(app) {
         login = login.replace(/-/g, '_').toLowerCase();
       }
       let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
+      let real_old_name = req.query.dbase == 'userbase' ? 'report_' + req.query.old_name : req.query.old_name;
+      let real_new_name = req.query.dbase == 'userbase' ? 'report_' + req.query.new_name : req.query.new_name;
       // Добавляем информацию об переименовываемой таблице
       await client2.query(`
         INSERT INTO altertableinfo (db,oldname,newname)
-        VALUES ('${db}','${req.query.old_name}','${req.query.new_name}');
+        VALUES ('${db}','${real_old_name}','${real_new_name}');
       `)
 
       let {renameTable} = require('./requests/renameTable')
-      await renameTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',req.query.old_name,req.query.new_name)
-      let updateUploadTable = require('./requests/updateUploadTable')
-      await updateUploadTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+      await renameTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',real_old_name,real_new_name)
+      if (req.query.dbase == 'userbase'){
+        let updateUserRequestTable = require('./requests/updateUserRequestTable')
+        await updateUserRequestTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+      } else {
+        let updateUploadTable = require('./requests/updateUploadTable')
+        await updateUploadTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+      }
 
       await client2.query(`
-        DELETE FROM altertableinfo * WHERE oldname = '${req.query.old_name}';
+        DELETE FROM altertableinfo * WHERE oldname = '${real_old_name}';
       `)
       
       res.send({status : 'ok'})
     } catch (err){
 
       await client2.query(`
-        DELETE FROM altertableinfo * WHERE oldname = '${req.query.old_name}';
+        DELETE FROM altertableinfo * WHERE oldname = '${real_old_name}';
       `)
 
       console.log('API_RENAME_TABLE_ERROR:::',err)
@@ -273,14 +286,19 @@ module.exports = function setup(app) {
 /// CREATE_JOB_API
 
   app.post('/api/create_hive_job', async(req,res)=>{
+    // Проверяем что существует БД для загрузки отчета
+    let { createDatabase } = require('./requests/createDatabase')  
+    let tsm = await createDatabase(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',res)
+    console.log('TST:::',tsm)
+    // Создаем джобу
     const { create_hive_job } = require('../services/create_hive_job')
-    const result = await create_hive_job(res,req.body.user_req)
+    const result = await create_hive_job(res,req.body.user_req,req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+    // Добавляем в БД информациею о джобе
     if ( result.state === 'ok'){
       await client2.query(`
         INSERT INTO hive_request (login,job_id,request,state) 
         VALUES ('${req.cookies.login || req.signedCookies.login || 'NON_LOGIN' }','${result.job_id}','${req.body.user_req}','{"state":"creating","job_id":"${result.job_id}"}')
       `)
-      console.log('DB_IT_DB_ERROR')
     }
     res.send(result)
   })
@@ -300,8 +318,14 @@ module.exports = function setup(app) {
         percentComplete : result.percentComplete,
       }
       if ( result.status.state == 'SUCCEEDED'){
-        const updateUserRequestTable = require('./requests/updateUserRequestTable')
-        await updateUserRequestTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+
+        let { rows } = await client2.query(`
+          SELECT state FROM hive_request WHERE job_id = '${job_id}'
+        `)
+        if ( (JSON.parse(rows[0].state)).state != 'SUCCEEDED'  ){
+          const updateUserRequestTable = require('./requests/updateUserRequestTable')
+          await updateUserRequestTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+        }
       }
 
       await client2.query(`

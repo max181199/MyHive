@@ -5,6 +5,7 @@ import { getQuery, postQuery } from '../services/query-service'
 
 const Root = styled.div`
   flex: 1;
+  overflow-y : auto;
 `;
 
 
@@ -22,6 +23,7 @@ const History = ({ setValue,jobs, getJobs, set_request }) => {
           if (state.state == 'SUCCEEDED' || state.state == 'FILED' || state.state == 'KILLED') {
             return ({ ...y, [x.job_id]: create_view(state) })
           } else {
+            //console.log('STATE:',state.state)
             nd_update.push(getJobStatus(x.job_id))
             return y
           }
@@ -31,7 +33,7 @@ const History = ({ setValue,jobs, getJobs, set_request }) => {
           let state = x
           return ({ ...y, [state.job_id]: create_view(state) })
         },{})})
-    }, 1000)
+    }, 5000)
 
     if (jobs.length !== 0) {
       update_global(jobs.reduce((y, x) => {

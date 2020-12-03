@@ -23,7 +23,8 @@ const createTable = async ( header_type, header_name, login, table_name, res ) =
       ROW FORMAT DELIMITED 
       FIELDS TERMINATED BY '\t'
       LINES TERMINATED BY '\n'
-      STORED AS TEXTFILE  
+      STORED AS TEXTFILE 
+      TBLPROPERTIES ('external.table.purge'='true') 
     `
     
     let res = await hiveRequest(createTableQuery)

@@ -72,7 +72,7 @@ const getMainInfo = async (req, res) => {
       let table_obj = describe[table_key]
       //console.log('TBOBJ',table_obj.table)
       if (table_obj.table.startsWith('report_')){
-        userbase.push(table_obj)
+        userbase.push({...table_obj,table : table_obj.table.replace(/report_/,'')})
       } else {
         uploaded.push(table_obj)
       }
