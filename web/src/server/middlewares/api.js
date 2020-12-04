@@ -6,6 +6,7 @@ const createTable = require('./requests/createTable');
 const { _axiosGet,_axiosPost,_axiosDelete } = require('../services/axios');
 const { throws } = require('assert');
 const unlinkAsync = promisify(fs.unlink)
+const readline = require('readline');
 
 
 
@@ -24,6 +25,70 @@ const upload = multer({ storage: storage }).fields([
 ])
 
 module.exports = function setup(app) {
+
+  app.get('/api/preview',async(req,res)=>{
+    try {
+      let login = req.cookies.login || req.signedCookies.login || 'NON_LOGIN';
+      if (login != 'admin') {
+        login = login.replace(/-/g, '_').toLowerCase();
+      }
+      let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login); 
+      let real_name = req.query.base == 'userbase' ? 'report_' + req.query.name : req.query.name;
+      // Для тестов создадим readable поток для локального файла
+      let {previewData} = require('../services/previewData')
+      let data = await previewData(db,real_name)
+      res.send({status : 'ok' , data : data.data })
+    } catch(err) {
+      console.log('API_PREVIEW_ERROR:::',err)
+      res.send({
+        status : 'error',
+        place  : 'API_PREVIEW',
+        data : []
+      })
+    }
+  })
+
+  app.get('/api/download',async(req,res)=>{
+    try {
+        let login = req.cookies.login || req.signedCookies.login || 'NON_LOGIN';
+        if (login != 'admin') {
+          login = login.replace(/-/g, '_').toLowerCase();
+        }
+        let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login); 
+        // Для тестов создадим readable поток для локального файла
+        let WebHDFS = require('webhdfs');
+        let hdfs = WebHDFS.createClient({
+          user: 'administrator',
+          host: 'hadoop-manager1.consultant.ru',
+          port: 50070,
+        });
+        res.attachment(`${req.query.name}.txt`);
+        let real_name = req.query.base == 'userbase' ? 'report_' + req.query.name : req.query.name ;
+        hdfs.readdir(`/user/hive/warehouse/${db}.db/${real_name}`,(err,files)=>{
+          //console.log('FILES::',files)
+          //console.log('ERR:',err)
+          if (err !== null ){
+            console.log('API_DOWNLOAD_READDIR_ERROR:::',err)
+          } else {
+            files.forEach( file => {
+              try {
+                downloadFile = hdfs.createReadStream(`/user/hive/warehouse/${db}.db/${real_name}/${file.pathSuffix}`)
+                downloadFile.on('error', (e)=>{console.log('DOWNLOAD_FILE_ERROR:::',e);res.send(e)})
+                downloadFile.pipe(res)
+              } catch (error) {
+                console.log('DATANODE:::',error)
+              }
+            });
+          }
+        })
+      } catch(err) {
+        console.log('API_DOWNLOAD_ERROR:::',err)
+        res.send({
+          status : 'error',
+          place  : 'API_DOWNLOAD'
+        })
+    }
+  })
 
   app.get('/api/getAlterTableInfo',async(req,res)=>{
     try{

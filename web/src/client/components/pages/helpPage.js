@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import Header from '../header'
 import HelpContentList from '../helpContentList'
 import { Fade } from '@material-ui/core';
+import { saveAs } from 'file-saver';
 
 const Root = styled.div`
   width: 100%;
@@ -60,7 +61,7 @@ const HelpPage = () => {
                   null
                 }
                 <Papper op={open}>
-                    <p>Papper</p>
+                    <button onClick={()=>{download()}} >DOWNLOAD</button>
                 </Papper>
             </Background>
         </Root>

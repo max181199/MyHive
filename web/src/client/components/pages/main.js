@@ -12,6 +12,7 @@ import History from "./../history";
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Accept from '../acceptTab';
+import Preview from '../preview';
 
 const Root = styled.div`
   width: 100%;
@@ -267,6 +268,13 @@ const Main = ({tables, tablesChanged }) => {
             tabs[value].type == 'accept'
             ?
             <Accept header_type={header_type} set_header_type={set_header_type} error={accError} setError={setAccError} columns={columns} setColumns={setColumns} header_name={header_name} set_header_name={set_header_name}  tabs={tabs} setTabs={setTabs} value={value} setValue={setValue}/>
+            :
+            null
+          }
+          {
+            tabs[value].type == 'preview'
+            ?
+            <Preview  tabs={tabs} setTabs={setTabs} value={value} setValue={setValue}/>
             :
             null
           }

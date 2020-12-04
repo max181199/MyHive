@@ -26,6 +26,7 @@ import { FormControl } from '@material-ui/core';
 import { Input } from '@material-ui/core';
 import CheckIcon from '@material-ui/icons/Check';
 import ClearIcon from '@material-ui/icons/Clear';
+import VisibilityIcon from '@material-ui/icons/Visibility';
 
 const Root = styled.div`
   width: 100%;
@@ -252,6 +253,31 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
     document.getElementById('fileLoader').value = ""
   }
 
+  const openPreview = (name,base,columns) => {
+    setTabs([...tabs,{
+      title : name.length > 10 ? (name.slice(0,9) + '...') : name,
+      fulnm : name,
+      type : 'preview',
+      new : 'true',
+      actual : 'true',
+      base : base,
+      data : null,
+      columns : columns
+    }])
+  }
+
+  useEffect ( ()=>{
+    setTabs(tabs.map( (tab)=>{
+      if ( tab.type == 'preview'){
+        if ( deletingTable.includes(tab.fulnm) || renameTables.includes(tab.fulnm)){
+          return({...tab, actual : 'false' })
+        } else { return tab }
+      } else {
+        return tab
+      }
+    }))
+  },[deletingTable,renameTables])
+
   const addUpload = async (f_name) => {
     let adr = `${window.location.protocol}//${window.location.host}/api/addColumn?name=${f_name}`
     let response = await fetch(adr);
@@ -314,6 +340,17 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
                   <Tooltip title="Удалить таблицу">
                     <DropIconButton onClick={(e)=>{deletingTable.includes(item.table)?null:setDeletingTable([...deletingTable,item.table]);e.preventDefault();e.stopPropagation();dropTable(item.table,name)}} size="small" clr={deletingTable.includes(item.table)?'#ffc107':'grey' }>
                       <DeleteOutlineIcon />
+                    </DropIconButton>
+                  </Tooltip>
+                  :
+                  null
+                }
+                {
+                  ( (!renameTables.includes(item.table))  && (!deletingTable.includes(item.table)) )
+                  ?
+                  <Tooltip title="Показать превью">
+                    <DropIconButton onClick={(e)=>{ e.stopPropagation();openPreview(item.table,name,item.columns)}} size="small" clr={'grey'}>
+                      <VisibilityIcon />
                     </DropIconButton>
                   </Tooltip>
                   :
