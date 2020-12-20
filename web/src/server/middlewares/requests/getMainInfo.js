@@ -32,8 +32,8 @@ const getMainInfo = async (req, res) => {
   //For test
   //login = 'admin' ////// DELETE
 
-  const { rows } = await client2.query(`
-    SELECT name, state FROM smsuploadfileinfo WHERE state != 'ok' AND login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}' ORDER BY date DESC
+  const { rows } = await client.query(`
+    SELECT name, state FROM hive_manager.smsuploadfileinfo WHERE state != 'ok' AND login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}' ORDER BY date DESC
   `)
 
   let resData = {

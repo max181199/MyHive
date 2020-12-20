@@ -20,6 +20,7 @@ import { Input } from '@material-ui/core';
 
 const Root = styled.div`
   flex: 1;
+  height : calc(100% - 45px);
 `;
 
 const Settings = styled.div`
@@ -38,8 +39,8 @@ const TitleText = styled(Typography)`
 
 const TablePlace = styled.div`
   background-color: rgb(255, 255, 255);
-  height : auto;
-  width : auto;
+  height : calc(100% - 45px);
+  overflow-y : auto;
   margin : 0;
   padding : 0;
   overflow-x : auto;
@@ -68,6 +69,9 @@ const StFormControl = styled(FormControl)`
     }
   }
 `
+const StyledTableContainer = styled(TableContainer)`
+  height : 100%;
+`;
 
 const Accept = ({ header_type,set_header_type,error,setError,columns,setColumns, header_name, set_header_name, tabs,setTabs,value,setValue})=>{
   
@@ -120,7 +124,7 @@ const header_name_maper = (text,index)=>{
         <Input 
           value={text}
           onChange={(e)=>{
-            const value = e.target.value;
+            const value = e.target.value.toLowerCase();
             if (value.slice(-1) === ' ') return;
             let tmp = header_name
             setError(false)
@@ -135,7 +139,7 @@ const header_name_maper = (text,index)=>{
 
 const header_type_mapper = (type,index) => {
   return(
-    <StTableCell key={'COLUMN_HEADER_TYPE'  + index }>
+    <StTableCell style={{ top: 38, borderBottom : '1px solid #64b5f6' }} key={'COLUMN_HEADER_TYPE'  + index }>
       <StFormControl>
         <Input 
           value={type}
@@ -201,8 +205,8 @@ return(
       }
     </Settings>
     <TablePlace>
-      <TableContainer>
-        <Table size="small">
+      <StyledTableContainer>
+        <Table stickyHeader={true} size="small">
           <TableHead>
             <TableRow>
               {header_name.map((el,index)=>header_name_maper(el,index))}
@@ -215,7 +219,7 @@ return(
             {columns.map((el,ind)=> rowMapper(el,ind))}
           </TableBody>
         </Table>
-      </TableContainer>
+      </StyledTableContainer>
     </TablePlace>
   </Root>
 )

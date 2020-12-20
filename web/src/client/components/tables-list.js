@@ -373,7 +373,7 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
                     (e)=>{
                       e.stopPropagation();
                       e.preventDefault();
-                      rewriteNewName(item.table,e.target.value)
+                      rewriteNewName(item.table,e.target.value.toLowerCase())
                     }} 
                   />
                 </RenameFormControl>

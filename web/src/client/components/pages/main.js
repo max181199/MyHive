@@ -164,7 +164,7 @@ const Main = ({tables, tablesChanged }) => {
     },20000)
     let int_id_jobs = setInterval( async ()=>{
       getJobs()
-    },10000)
+    },5000)
     
     return(()=>{clearInterval(int_id);clearInterval(int_id_jobs)})
   }, []);
@@ -200,7 +200,7 @@ const Main = ({tables, tablesChanged }) => {
             let res = []
             let index = 1
             for ( let i in data[0] ){
-              res.push('Column_' + index)
+              res.push('column_' + index)
               index++;
             }
             set_header_name(res)
@@ -260,7 +260,7 @@ const Main = ({tables, tablesChanged }) => {
           {
             tabs[value].type == 'redactor'
             ?
-            <CodeEditor request={request} setRequest={set_request} getJobs={getJobs} />
+            <CodeEditor request={request} setRequest={set_request} getJobs={getJobs} jobs={jobs} />
             :
             null
           }

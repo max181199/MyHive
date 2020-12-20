@@ -62,7 +62,25 @@ const History = ({ setValue,jobs, getJobs, set_request }) => {
       return (
         {
           color: '#2196f3',
-          word: 'Узнаем состояние отчета',
+          word: 'Начинаем создание отчета',
+          percent: 100,
+          doubleWord : null,
+          doublePercent : null
+        })
+    } else if (status.state == 'loading') {
+      return (
+        {
+          color: '#2196f3',
+          word: 'Отправляем запрос на создание',
+          percent: 100,
+          doubleWord : null,
+          doublePercent : null
+        })
+    } else if (status.state == 'cancel') {
+      return (
+        {
+          color: 'darggrey',
+          word: 'Отчет не может быть создан',
           percent: 100,
           doubleWord : null,
           doublePercent : null

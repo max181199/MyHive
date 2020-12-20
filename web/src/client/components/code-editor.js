@@ -27,8 +27,10 @@ const Settings = styled.div`
 `;
 
 
-const CodeEditor = ({ tables , request , setRequest, getJobs}) => {
+const CodeEditor = ({ tables , request , setRequest, getJobs ,jobs}) => {
   const editor = useRef(null);
+
+  const [ creating , setCreating ] = useState(false);
 
   useEffect(() => {
     let wordList = [{
@@ -63,9 +65,13 @@ const CodeEditor = ({ tables , request , setRequest, getJobs}) => {
     editor.current.editor.setOption("enableBasicAutocompletion", [staticWordCompleter]);
   }, [tables])
 
+  useEffect(()=>{ setCreating(false)},[jobs])
+
   const createJob = (user_req) => {
+    setCreating(true);
+    user_req = user_req.replace(/;$/i ,'')
     postQuery('/create_hive_job', { user_req }).then((data) => {
-      console.log('FRONT_CREATE_JOB_DATA:::', data)
+      //console.log('FRONT_CREATE_JOB_DATA:::', data)
       if (data.state == 'ok') {
         getJobs()
       }
@@ -76,7 +82,7 @@ const CodeEditor = ({ tables , request , setRequest, getJobs}) => {
     <Root>
       <Settings>
         <Tooltip title="Выполнить">
-          <IconButton size="small" onClick={()=>{createJob(request)}}>
+          <IconButton size="small" disabled={creating} onClick={()=>{createJob(request)}}>
             <PlayCircleOutlineIcon />
           </IconButton>
         </Tooltip>

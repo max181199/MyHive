@@ -96,19 +96,9 @@ const HistoryItem = (el,setupVNE,getJobs,set_request,setValue)=>{
         null
       }
       <Settings>
-        <Tooltip title="Текст запроса">
-          <SettingsBtn size="small">
-            <CodeIcon />
-          </SettingsBtn>
-        </Tooltip>
         <Tooltip title="Перенести текст">
           <SettingsBtn onClick={()=>{set_request(el.request),setValue(0)}} size="small">
             <ReplyAllIcon />
-          </SettingsBtn>
-        </Tooltip>
-        <Tooltip onClick={()=>{console.log('LATER_BE_WORK')}} title="Сохранить результат">
-          <SettingsBtn size="small">
-            <SaveIcon />
           </SettingsBtn>
         </Tooltip>
         <Tooltip onClick={()=>{killJob(el.job_id)}} title="Удалить запрос">

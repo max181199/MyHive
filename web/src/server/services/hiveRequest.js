@@ -47,7 +47,7 @@ const hiveRequest = async (req) => {
                 resolve({
                     status : 'error',
                     error : err,
-                    place : 'HIVE_REQUEST'
+                    place : 'hive_manager.hive_request'
                 })
               })
             } catch(err) {
@@ -55,7 +55,7 @@ const hiveRequest = async (req) => {
                 resolve({
                     status : 'error',
                     error : err,
-                    place : 'HIVE_REQUEST'
+                    place : 'hive_manager.hive_request'
                 })
             }
         })

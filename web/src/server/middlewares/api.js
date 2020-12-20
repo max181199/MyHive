@@ -8,11 +8,9 @@ const { throws } = require('assert');
 const unlinkAsync = promisify(fs.unlink)
 const readline = require('readline');
 
-
-
 let storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, '/Users/max/Work/tmp')
+    cb(null, '/tmp/hive')
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname + '.csv'  )
@@ -103,19 +101,19 @@ module.exports = function setup(app) {
       let _usedNames = []
 
       // Таблицы, которые удаляются (DeletingTable) :
-      let { rows } = await client2.query(` SELECT oldname FROM altertableinfo WHERE db='${db}' AND newname = ''`)
+      let { rows } = await client.query(` SELECT oldname FROM hive_manager.altertableinfo WHERE db='${db}' AND newname = ''`)
       if ( rows.length != 0 ){
         _deletingTable = rows.map(el=>el.oldname.replace(/^report_/,''));
         //console.log("OTL__deletingTable:",_deletingTable);
       }
       // Таблицы которые переименовываются (RenameTables)
-      let { rows : rows1 } = await client2.query(` SELECT oldname FROM altertableinfo WHERE db='${db}' AND newname != ''`)
+      let { rows : rows1 } = await client.query(` SELECT oldname FROM hive_manager.altertableinfo WHERE db='${db}' AND newname != ''`)
       if ( rows1.length != 0 ){
         _renameTables = rows1.map(el=>el.oldname.replace(/^report_/,''));
         //console.log("OTL__renameTables:",_renameTables);
       }
       // Имена которые заняты для переимонавания
-      let { rows : rows2} = await client2.query(` SELECT newname FROM altertableinfo WHERE db='${db}' AND newname != ''`)
+      let { rows : rows2} = await client.query(` SELECT newname FROM hive_manager.altertableinfo WHERE db='${db}' AND newname != ''`)
       if ( rows2.length != 0 ){
         _usedNames = rows2.map(el=>el.newname.replace(/^report_/,''));
         //console.log("OTL__usedNames:",_usedNames);
@@ -143,8 +141,8 @@ module.exports = function setup(app) {
 
   app.get('/api/foggot_error',async(req,res)=>{
     try {
-      client2.query(`
-        UPDATE smsuploadfileinfo SET state = 'ok' WHERE name = '${req.query.name}';`)
+      client.query(`
+        UPDATE hive_manager.smsuploadfileinfo SET state = 'ok' WHERE name = '${req.query.name}';`)
       res.send({status : 'ok'})
     } catch (error) {
       console.log("FOGGOT_ERROR_ERROR:::",error);
@@ -170,9 +168,9 @@ module.exports = function setup(app) {
 
   app.get('/api/addColumn', async(req,res) =>{
     try{
-      const { rows } = await client2.query(`
-        INSERT INTO smsuploadfileinfo (login, name, state) 
-        VALUES ('${req.cookies.login || req.signedCookies.login || 'NON_LOGIN' }','${req.query.name.slice(0,req.query.name.length - 4) + '_' + new Date().valueOf() }', 'Загрузка данных на сервер')
+      const { rows } = await client.query(`
+        INSERT INTO hive_manager.smsuploadfileinfo (login, name, state) 
+        VALUES ('${req.cookies.login || req.signedCookies.login || 'NON_LOGIN' }','${req.query.name.slice(0,req.query.name.length - 4) + '_' + new Date().valueOf() }', 'ok')
         RETURNING id,name
       `)
       res.send({status : 'ok', place : 'addRows' ,id : rows[0].id,name : rows[0].name })
@@ -190,8 +188,8 @@ module.exports = function setup(app) {
       let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
       let real_name = req.query.dbase == 'userbase' ? 'report_' + req.query.name : req.query.name;
       // Добавляем информацию об удаляемой таблице
-      await client2.query(`
-        INSERT INTO altertableinfo (db,oldname,newname)
+      await client.query(`
+        INSERT INTO hive_manager.altertableinfo (db,oldname,newname)
         VALUES ('${db}','${real_name}','');
       `)
       let { dropTable } = require('./requests/dropTable')
@@ -204,14 +202,14 @@ module.exports = function setup(app) {
         await updateUploadTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
       }
       // Считаем таблицу обновленной
-      await client2.query(`
-        DELETE FROM altertableinfo * WHERE oldname = '${real_name}';
+      await client.query(`
+        DELETE FROM hive_manager.altertableinfo * WHERE oldname = '${real_name}';
       `)
       res.send({status : 'ok'})
     } catch (err){
       // Считаем что удаление завершилось не удачно
-      await client2.query(`
-        DELETE FROM altertableinfo * WHERE oldname = '${real_name}';
+      await client.query(`
+        DELETE FROM hive_manager.altertableinfo * WHERE oldname = '${real_name}';
       `)
       console.log('API_DROP_TABLE_ERROR:::',err)
       res.send({
@@ -232,8 +230,8 @@ module.exports = function setup(app) {
       let real_old_name = req.query.dbase == 'userbase' ? 'report_' + req.query.old_name : req.query.old_name;
       let real_new_name = req.query.dbase == 'userbase' ? 'report_' + req.query.new_name : req.query.new_name;
       // Добавляем информацию об переименовываемой таблице
-      await client2.query(`
-        INSERT INTO altertableinfo (db,oldname,newname)
+      await client.query(`
+        INSERT INTO hive_manager.altertableinfo (db,oldname,newname)
         VALUES ('${db}','${real_old_name}','${real_new_name}');
       `)
 
@@ -247,15 +245,15 @@ module.exports = function setup(app) {
         await updateUploadTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
       }
 
-      await client2.query(`
-        DELETE FROM altertableinfo * WHERE oldname = '${real_old_name}';
+      await client.query(`
+        DELETE FROM hive_manager.altertableinfo * WHERE oldname = '${real_old_name}';
       `)
       
       res.send({status : 'ok'})
     } catch (err){
 
-      await client2.query(`
-        DELETE FROM altertableinfo * WHERE oldname = '${real_old_name}';
+      await client.query(`
+        DELETE FROM hive_manager.altertableinfo * WHERE oldname = '${real_old_name}';
       `)
 
       console.log('API_RENAME_TABLE_ERROR:::',err)
@@ -271,10 +269,13 @@ module.exports = function setup(app) {
     try{
 
       let result = null
+      // Начинаем загрузку файла
+      await client.query(`
+          UPDATE hive_manager.smsuploadfileinfo SET state = 'Готовимся к отправке' WHERE id = ${req.body.id};`)
 
       // Имя файла
-        const { rows } = await client2.query(`
-          SELECT name FROM smsuploadfileinfo WHERE id = ${req.body.id}`)
+        const { rows } = await client.query(`
+          SELECT name FROM hive_manager.smsuploadfileinfo WHERE id = ${req.body.id}`)
         let name = rows[0].name;
 
       // Заголовок
@@ -283,33 +284,33 @@ module.exports = function setup(app) {
         console.log('HEADERS:::',header_name,header_type)
 
       //Копируем файл на сервер hadoop 
-        await client2.query(`
-          UPDATE smsuploadfileinfo SET state = 'Передаем данные на сервер' WHERE id = ${req.body.id};`)
+        await client.query(`
+          UPDATE hive_manager.smsuploadfileinfo SET state = 'Передаем данные на сервер' WHERE id = ${req.body.id};`)
         let { copyToHDFS,_ASYNC_SEND_FILE_ } = require('../services/copyToHDFS')
-        //let result = await copyToHDFS(req.files['csv_file'][0].path,name)
+        result = await copyToHDFS(req.files['csv_file'][0].path,name)
         // Временное решение, тяжелое и не эффективное( для маленьких файлов сойдет)
-        result = await _ASYNC_SEND_FILE_(req.files['csv_file'][0].path,name) 
+        //result = await _ASYNC_SEND_FILE_(req.files['csv_file'][0].path,name) 
         if ( result.status != 'ok') throw({err : 'Ошибка копирование данных на сервер'})
       
       //Проверяем на наличие схемы 
-        await client2.query(`
-          UPDATE smsuploadfileinfo SET state = 'Проверяем наличие БД' WHERE id = ${req.body.id};`)
+        await client.query(`
+          UPDATE hive_manager.smsuploadfileinfo SET state = 'Проверяем наличие БД' WHERE id = ${req.body.id};`)
         let { createDatabase } = require('./requests/createDatabase')  
         result = await createDatabase(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',res)
         if ( result.status != 'ok') throw({err : 'Не получилось создать БД'})
         let databaseName = result.db
       
       //Создаем таблицу
-        await client2.query(`
-          UPDATE smsuploadfileinfo SET state = 'Создаем таблицу' WHERE id = ${req.body.id};`)
+        await client.query(`
+          UPDATE hive_manager.smsuploadfileinfo SET state = 'Создаем таблицу' WHERE id = ${req.body.id};`)
         let { createTable } = require('./requests/createTable')
         result = await createTable(header_type,header_name,req.cookies.login || req.signedCookies.login || 'NON_LOGIN',name,res)
         console.log("CHECK:::",result);
         if ( result.status != 'ok') throw({err : 'Не получилось создать таблицу'})
       
       // Заполняем таблицу данными
-        await client2.query(`
-          UPDATE smsuploadfileinfo SET state = 'Заполняем таблицу' WHERE id = ${req.body.id};`)
+        await client.query(`
+          UPDATE hive_manager.smsuploadfileinfo SET state = 'Заполняем таблицу' WHERE id = ${req.body.id};`)
         let { fillTable } = require('./requests/fillTable')
         result = await fillTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',name)
         if ( result.status != 'ok') throw({err : 'Не получилось заполнить таблицу'})
@@ -322,15 +323,15 @@ module.exports = function setup(app) {
         await unlinkAsync(req.files['csv_file'][0].path)
 
       //Обновляем данные о таблицах
-        await client2.query(`
-          UPDATE smsuploadfileinfo SET state = 'Обновялем список таблиц' WHERE id = ${req.body.id};`)
+        await client.query(`
+          UPDATE hive_manager.smsuploadfileinfo SET state = 'Обновялем список таблиц' WHERE id = ${req.body.id};`)
         let updateUploadTable = require('./requests/updateUploadTable')
         result = await updateUploadTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
         if ( result.status != 'ok') throw({err : 'Не можем обновить список таблиц'})
 
       //Архивируем запись о загруженных таблицах
-        await client2.query(`
-          UPDATE smsuploadfileinfo SET state = 'ok' WHERE id = ${req.body.id};`)
+        await client.query(`
+          UPDATE hive_manager.smsuploadfileinfo SET state = 'ok' WHERE id = ${req.body.id};`)
 
       //Возвращаем ответ 
         res.send({ status: 'ok'});
@@ -339,8 +340,8 @@ module.exports = function setup(app) {
       // Говорим пользователю, что произошла ошибка
       // Префикс error_ нужен, для понимания фронта, что это ошибка
       // остальная часть содержит дополнительную информацию отображаемую на фронте
-      await client2.query(`
-        UPDATE smsuploadfileinfo SET state = 'error_${err.err}' WHERE id = ${req.body.id};
+      await client.query(`
+        UPDATE hive_manager.smsuploadfileinfo SET state = 'error_${err.err}' WHERE id = ${req.body.id};
       `)
       // Возвращаем данные об ошибках
       console.log("API_uploadCSV_ERROR",err)
@@ -351,6 +352,12 @@ module.exports = function setup(app) {
 /// CREATE_JOB_API
 
   app.post('/api/create_hive_job', async(req,res)=>{
+    let key = new Date
+    // Добавляем информацию о джобе в бд
+    await client.query(`
+      INSERT INTO hive_manager.hive_request (login,job_id,request,state) 
+      VALUES ('${req.cookies.login || req.signedCookies.login || 'NON_LOGIN' }','${key}','${req.body.user_req}','{"state":"loading","job_id":"${key}"}')
+    `)
     // Проверяем что существует БД для загрузки отчета
     let { createDatabase } = require('./requests/createDatabase')  
     let tsm = await createDatabase(req.cookies.login || req.signedCookies.login || 'NON_LOGIN',res)
@@ -358,12 +365,13 @@ module.exports = function setup(app) {
     // Создаем джобу
     const { create_hive_job } = require('../services/create_hive_job')
     const result = await create_hive_job(res,req.body.user_req,req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
-    // Добавляем в БД информациею о джобе
+    // Обновляем в БД информациею о джобе
     if ( result.state === 'ok'){
-      await client2.query(`
-        INSERT INTO hive_request (login,job_id,request,state) 
-        VALUES ('${req.cookies.login || req.signedCookies.login || 'NON_LOGIN' }','${result.job_id}','${req.body.user_req}','{"state":"creating","job_id":"${result.job_id}"}')
-      `)
+      await client.query(`
+       UPDATE hive_manager.hive_request SET job_id = '${result.job_id}', state = '{"state":"creating","job_id":"${result.job_id}"}' WHERE job_id = '${key}';`)
+    } else {
+      await client.query(`
+       UPDATE hive_manager.hive_request SET job_id = '${result.job_id}', state = '{"state":"cancel","job_id":"${result.job_id}"}' WHERE job_id = '${key}';`)
     }
     res.send(result)
   })
@@ -384,8 +392,8 @@ module.exports = function setup(app) {
       }
       if ( result.status.state == 'SUCCEEDED'){
 
-        let { rows } = await client2.query(`
-          SELECT state FROM hive_request WHERE job_id = '${job_id}'
+        let { rows } = await client.query(`
+          SELECT state FROM hive_manager.hive_request WHERE job_id = '${job_id}'
         `)
         if ( (JSON.parse(rows[0].state)).state != 'SUCCEEDED'  ){
           const updateUserRequestTable = require('./requests/updateUserRequestTable')
@@ -393,8 +401,8 @@ module.exports = function setup(app) {
         }
       }
 
-      await client2.query(`
-       UPDATE hive_request SET state = '${JSON.stringify(res_obj)}' WHERE job_id = '${job_id}';`)
+      await client.query(`
+       UPDATE hive_manager.hive_request SET state = '${JSON.stringify(res_obj)}' WHERE job_id = '${job_id}';`)
       res.send({state : 'ok', status : res_obj})
     } catch (err) {
       console.log('GET_JOB_STATUS_ERROR',err)
@@ -405,8 +413,8 @@ module.exports = function setup(app) {
   app.get('/api/get_jobs', async(req,res)=>{
     try{
       console.log('GET_JOBS_OK')
-      const { rows } = await client2.query(`
-        SELECT job_id,request,state,date FROM hive_request WHERE login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}'
+      const { rows } = await client.query(`
+        SELECT job_id,request,state,date FROM hive_manager.hive_request WHERE login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}'
         ORDER BY date DESC
       `)
       console.log('GET_JOBS_DONE')
@@ -421,8 +429,8 @@ module.exports = function setup(app) {
   app.get('/api/forgot_job',async(req,res)=>{
     try{
       const job_id = req.query.job_id;
-      await client2.query(`
-        DELETE from hive_request WHERE job_id='${job_id}'  AND login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}';
+      await client.query(`
+        DELETE from hive_manager.hive_request WHERE job_id='${job_id}'  AND login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}';
       `)
       res.send({state : 'ok'})
     } catch(err){

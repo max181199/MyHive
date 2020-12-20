@@ -24,13 +24,13 @@ const create_hive_job = (res , user_req , login) => {
             // hiveRequest(prefix + user_req).then((data)=>{
             //   console.log("CRJOB:",data)
             // });
-            
-            
 
+            console.log('TEST:::',prefix + user_req)
+            
             _axiosPost(res,'http://10.106.79.70:50111/templeton/v1/hive?user.name=administrator',{
               execute : prefix + user_req
             }).then( (data)=>{
-              //console.log('DATA:::',data)
+              console.log('DATA:::',data)
               resolve({
                 state : 'ok',
                 job_id : data.id,

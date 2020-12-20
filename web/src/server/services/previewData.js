@@ -18,10 +18,10 @@ const previewData = ( db,real_name) => {
           if (err !== null ){
             console.log('API_DOWNLOAD_READDIR_ERROR:::',err)
           } else {
-            console.log('FILES::',files)
+            //console.log('FILES::',files)
             let file_path = `/user/hive/warehouse/${db}.db/${real_name}/` + files[0].pathSuffix;
             //let downloadFile = hdfs.createReadStream(file_path)
-            let downloadFile = fs.createReadStream('/Users/max/Work/tmp/brokenMind.csv')
+            let downloadFile = hdfs.createReadStream(file_path)
 
             downloadFile.on('error', (e)=>{
               console.log('PREVIEW_FILE_ERROR:::',e);

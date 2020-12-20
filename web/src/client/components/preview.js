@@ -13,11 +13,13 @@ import CloseIcon from '@material-ui/icons/Close';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { getQuery } from '../services/query-service';
+import { BorderBottom } from '@material-ui/icons';
 
 
 
 const Root = styled.div`
   flex: 1;
+  height : calc(100% - 45px);
 `;
 
 const Circular = styled(CircularProgress)`
@@ -29,6 +31,8 @@ const LoadPlace = styled.div`
   width  : 100%;
   lign-content: center;
   justify-content: center;
+  height : calc(100% - 45px);
+  overflow-y : auto;
   display: flex;
 `;
 
@@ -48,12 +52,10 @@ const TitleText = styled(Typography)`
 
 const TablePlace = styled.div`
   background-color: rgb(255, 255, 255);
-  height : auto;
+  height : calc(100% - 45px);
   width : auto;
   margin : 0;
   padding : 0;
-  overflow-x : auto;
-  overflow-y : auto;
 `;
 
 const StTableCell = styled(TableCell)`
@@ -65,7 +67,9 @@ const StTableCell = styled(TableCell)`
 const NoWrap = styled.span`
   white-space: nowrap;
 `
-
+const StyledTableContainer = styled(TableContainer)`
+  height : 100%;
+`;
 const Preview = ({tabs,setTabs,value,setValue}) => {
 
   const close = ()=>{
@@ -79,12 +83,14 @@ const Preview = ({tabs,setTabs,value,setValue}) => {
 
   useEffect(()=>{
     setLoad(true)
-    getQuery('/preview',{name : tabs[value].fulnm , base : tabs[value].base})
-    .then( res => {
-      //console.log(res)
-      setRows(res.data)
-      setLoad(false)
-    })
+    if (tabs[value].actual != 'false'){
+      getQuery('/preview',{name : tabs[value].fulnm , base : tabs[value].base})
+      .then( res => {
+        //console.log(res)
+        setRows(res.data)
+        setLoad(false)
+      })
+    }
   },[value])
 
   const header_name_maper = (obj,index,name)=>{
@@ -99,7 +105,7 @@ const Preview = ({tabs,setTabs,value,setValue}) => {
   
   const header_type_mapper = (obj,index,name) => {
     return(
-      <StTableCell key={'COLUMN_HEADER_TYPE'  + index + name }>
+      <StTableCell style={{ top: 38 , borderBottom : '1px solid #64b5f6' }} key={'COLUMN_HEADER_TYPE'  + index + name }>
         <NoWrap>
           {obj.type}
         </NoWrap>
@@ -165,13 +171,13 @@ const Preview = ({tabs,setTabs,value,setValue}) => {
         </LoadPlace>
         :
         <TablePlace key={tabs[value].fulnm + 'table_place'}>
-          <TableContainer key={tabs[value].fulnm + 'table_container'}>
-            <Table size="small" key={tabs[value].fulnm + 'table'}>
+          <StyledTableContainer key={tabs[value].fulnm + 'table_container'}>
+            <Table size="small" stickyHeader={true} key={tabs[value].fulnm + 'table'}>
               <TableHead key={tabs[value].fulnm + 'table_head'} >
                 <TableRow key={tabs[value].fulnm + 'table_head_row_one'}>
                   {tabs[value].columns.map((el,index)=>header_name_maper(el,index,tabs[value].fulnm))}
                 </TableRow>
-                <TableRow key={tabs[value].fulnm + 'table_head_row_two'}>
+                <TableRow  key={tabs[value].fulnm + 'table_head_row_two'}>
                   {tabs[value].columns.map((el,index)=>header_type_mapper(el,index,tabs[value].fulnm))}
                 </TableRow>
               </TableHead>
@@ -179,7 +185,7 @@ const Preview = ({tabs,setTabs,value,setValue}) => {
                 {rows.map((el,ind)=> rowMapper(el,ind,tabs[value].fulnm))}
               </TableBody>
             </Table>
-          </TableContainer>
+          </StyledTableContainer>
         </TablePlace>
       }
     </Root>
