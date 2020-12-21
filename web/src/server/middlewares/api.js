@@ -10,7 +10,7 @@ const readline = require('readline');
 
 let storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, '/tmp/hive')
+    cb(null, '/home/administrator/tmp/hive')
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname + '.csv'  )

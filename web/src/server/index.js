@@ -9,7 +9,7 @@ const schedule = require('node-schedule')
 const updateConsultantTable = require('./middlewares/requests/updateConsultantTable')
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-process.env.HTTP_PORT = process.env.HTTP_PORT || 30007;
+process.env.HTTP_PORT = process.env.HTTP_PORT || 30008;
 
 function onUnhandledRejection(err) {
   console.log('APPLICATION ERROR:', err);
@@ -36,7 +36,7 @@ if(process.env.NODE_ENV == 'production') {
   authFilter(app);
 }
 
-app.use(logger.expressMiddleware);
+// app.use(logger.expressMiddleware);
 try {
   setupApiRoutes(app);
 } catch (e) {

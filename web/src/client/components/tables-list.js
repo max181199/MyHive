@@ -214,9 +214,9 @@ const TablesList = ({alterData,tabs,setTabs,tables, tablesChanged}) => {
     })
   }
 
-  useEffect(()=>{
-    cookies.set('login', 'test-user', { path: '/' });
-  },[])
+  // useEffect(()=>{
+  //   cookies.set('login', 'test-user', { path: '/' });
+  // },[])
 
   useEffect(()=>{
     let tmp = [];
