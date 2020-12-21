@@ -412,12 +412,12 @@ module.exports = function setup(app) {
 
   app.get('/api/get_jobs', async(req,res)=>{
     try{
-      console.log('GET_JOBS_OK')
+      //console.log('GET_JOBS_OK')
       const { rows } = await client.query(`
         SELECT job_id,request,state,date FROM hive_manager.hive_request WHERE login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}'
         ORDER BY date DESC
       `)
-      console.log('GET_JOBS_DONE')
+      //console.log('GET_JOBS_DONE')
       
       res.send({state : 'ok', rows})
     } catch(err){
