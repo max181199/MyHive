@@ -5,7 +5,7 @@ const createTable = async ( header_type, header_name, login, table_name, res ) =
   if (login != 'admin') {
     login = login.replace(/-/g, '_').toLowerCase();
   }
-  let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
+  let db = 'userbase_' + (login == 'non_login' ? 'default' : login);
 
   header_type = header_type.split(',')
   header_name = header_name.split(',')

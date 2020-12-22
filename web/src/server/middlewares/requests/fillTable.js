@@ -3,7 +3,7 @@ const fillTable = async (login,name) => {
   if (login != 'admin') {
     login = login.replace(/-/g, '_').toLowerCase();
   }
-  let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
+  let db = 'userbase_' + (login == 'non_login' ? 'default' : login);
   try{
     let loadQuery = `LOAD DATA INPATH '/user/admin/tmp/hive_upload_table/${name}' OVERWRITE INTO TABLE ${db}.${name}`
     //console.log('LQ:',loadQuery)

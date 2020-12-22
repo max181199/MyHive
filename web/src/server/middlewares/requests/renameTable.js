@@ -3,7 +3,7 @@ const renameTable = async ( login , old_name , new_name ) =>{
   if (login != 'admin') {
     login = login.replace(/-/g, '_').toLowerCase();
   }
-  let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
+  let db = 'userbase_' + (login == 'non_login' ? 'default' : login);
 
   try{
     let extFalse = `

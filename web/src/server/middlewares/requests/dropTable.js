@@ -5,7 +5,7 @@ const dropTable = async ( login , table_name ) => {
   if (login != 'admin') {
     login = login.replace(/-/g, '_').toLowerCase();
   }
-  let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
+  let db = 'userbase_' + (login == 'non_login' ? 'default' : login);
 
   try {
     let dropRequest = `DROP TABLE IF EXISTS ${db}.${table_name}`

@@ -123,48 +123,25 @@ const History = ({ setValue,jobs, getJobs, set_request }) => {
           doublePercent : null,
         })
     } else if (status.state === 'RUNNING') {
-      if (status.setupProgress == 1) {
+      if (status.mapProgress == 1 && status.reduceProgress == 1) {
         return (
           {
             color: '#ffeb3b',
-            word: 'Установка',
+            word: 'Удаляем временные данные',
             percent: 100,
             doubleWord : null,
             doublePercent : null,
           })
-      } else if (status.cleanupProgress == 1){
-          return (
-            {
-              color: '#ffeb3b',
-              word: 'Очистка',
-              percent: 100,
-              doubleWord : null,
-              doublePercent : null,
-            }
-          )
       } else {
-        const parseData = status.percentComplete == null ? null : status.percentComplete.split(' ')
-        if (parseData == null){
-          return(
-            {
-              color: '#2196f3',
-              word: 'Map(??%)',
-              percent: 0,
-              doubleWord : 'Reduce(??%)',
-              doublePercent : 0,
-            }
-          )
-        } else {
-          return (
-            {
-              color: '#2196f3',
-              word: `Map(${parseData[1]}%)`,
-              percent: parseData[1],
-              doubleWord : `Reduce(${parseData[3]}%)`,
-              doublePercent : parseData[3],
-            }
-          )
-        }
+        return(
+          {
+            color: '#2196f3',
+            word: `Map(${ Math.trunc(status.mapProgress * 100) }%)`,
+            percent: Math.trunc(status.mapProgress * 100),
+            doubleWord : `Reduce(${ Math.trunc(status.reduceProgress * 100)}%)`,
+            doublePercent : Math.trunc(status.reduceProgress * 100),
+          }
+        )
       }
     }
   }

@@ -8,7 +8,7 @@ const updateUserRequestTable = async (login) => {
     login = login.replace(/-/g, '_').toLowerCase();
   }
 
-  let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
+  let db = 'userbase_' + (login == 'non_login' ? 'default' : login);
 
   
   try {

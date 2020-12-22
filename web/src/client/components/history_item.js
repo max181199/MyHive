@@ -70,6 +70,8 @@ const HistoryItem = (el,setupVNE,getJobs,set_request,setValue)=>{
     })
   }
 
+  //console.log('setup:::',setup)
+
   return (
     <HistoryItemWrapper key={'HISTORY_ITEM' + el.date} >
       <Typography><strong>Дата:</strong> {moment(el.date).format('DD.MM.YYYY HH:mm:ss')}</Typography>
@@ -83,7 +85,7 @@ const HistoryItem = (el,setupVNE,getJobs,set_request,setValue)=>{
         ?
         <Typography>
           <strong>Статус: </strong>
-          <span>{doubleWord}</span>
+          <span>{setup.doubleWord}</span>
         </Typography>
         :
         null

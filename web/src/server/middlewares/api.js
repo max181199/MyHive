@@ -30,7 +30,7 @@ module.exports = function setup(app) {
       if (login != 'admin') {
         login = login.replace(/-/g, '_').toLowerCase();
       }
-      let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login); 
+      let db = 'userbase_' + (login == 'non_login' ? 'default' : login); 
       let real_name = req.query.base == 'userbase' ? 'report_' + req.query.name : req.query.name;
       // Для тестов создадим readable поток для локального файла
       let {previewData} = require('../services/previewData')
@@ -52,7 +52,7 @@ module.exports = function setup(app) {
         if (login != 'admin') {
           login = login.replace(/-/g, '_').toLowerCase();
         }
-        let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login); 
+        let db = 'userbase_' + (login == 'non_login' ? 'default' : login); 
         // Для тестов создадим readable поток для локального файла
         let WebHDFS = require('webhdfs');
         let hdfs = WebHDFS.createClient({
@@ -94,7 +94,7 @@ module.exports = function setup(app) {
       if (login != 'admin') {
         login = login.replace(/-/g, '_').toLowerCase();
       }
-      let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login); 
+      let db = 'userbase_' + (login == 'non_login' ? 'default' : login); 
 
       let _deletingTable = []
       let _renameTables = []
@@ -185,7 +185,7 @@ module.exports = function setup(app) {
       if (login != 'admin') {
         login = login.replace(/-/g, '_').toLowerCase();
       }
-      let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
+      let db = 'userbase_' + (login == 'non_login' ? 'default' : login);
       let real_name = req.query.dbase == 'userbase' ? 'report_' + req.query.name : req.query.name;
       // Добавляем информацию об удаляемой таблице
       await client.query(`
@@ -226,7 +226,7 @@ module.exports = function setup(app) {
       if (login != 'admin') {
         login = login.replace(/-/g, '_').toLowerCase();
       }
-      let db = 'userbase_' + (login == 'NON_LOGIN' ? 'default' : login);
+      let db = 'userbase_' + (login == 'non_login' ? 'default' : login);
       let real_old_name = req.query.dbase == 'userbase' ? 'report_' + req.query.old_name : req.query.old_name;
       let real_new_name = req.query.dbase == 'userbase' ? 'report_' + req.query.new_name : req.query.new_name;
       // Добавляем информацию об переименовываемой таблице
@@ -365,6 +365,7 @@ module.exports = function setup(app) {
     // Создаем джобу
     const { create_hive_job } = require('../services/create_hive_job')
     const result = await create_hive_job(res,req.body.user_req,req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+    console.log('CRJ:::',result)
     // Обновляем в БД информациею о джобе
     if ( result.state === 'ok'){
       await client.query(`
@@ -379,31 +380,49 @@ module.exports = function setup(app) {
   app.get('/api/get_job_status', async(req,res)=>{
     try{
       const job_id = req.query.job_id;
-      const result =  await _axiosGet(res,`http://10.106.79.70:50111/templeton/v1/jobs/${job_id}?user.name=admin`)
-      const res_obj = {
-        job_id : job_id,
-        runState : result.status.runState,
-        state : result.status.state,
-        mapProgress : result.status.mapProgress,
-        reduceProgress : result.status.reduceProgress,
-        setupProgress : result.status.setupProgress,
-        cleanupProgress : result.status.cleanupProgress,
-        percentComplete : result.percentComplete,
-      }
-      if ( result.status.state == 'SUCCEEDED'){
+      if ( job_id.startsWith('job')){
 
-        let { rows } = await client.query(`
-          SELECT state FROM hive_manager.hive_request WHERE job_id = '${job_id}'
-        `)
-        if ( (JSON.parse(rows[0].state)).state != 'SUCCEEDED'  ){
-          const updateUserRequestTable = require('./requests/updateUserRequestTable')
-          await updateUserRequestTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+        const result =  await _axiosGet(res,`http://10.106.79.70:50111/templeton/v1/jobs/${job_id}?user.name=admin`)
+        const res_obj = {
+          job_id : job_id,
+          runState : result.status.runState,
+          state : result.status.state,
+          mapProgress : result.status.mapProgress,
+          reduceProgress : result.status.reduceProgress,
+          setupProgress : result.status.setupProgress,
+          cleanupProgress : result.status.cleanupProgress,
+          percentComplete : result.percentComplete,
         }
+        if ( result.status.state == 'SUCCEEDED'){
+          let { rows } = await client.query(`
+            SELECT state FROM hive_manager.hive_request WHERE job_id = '${job_id}'
+          `)
+          if ( rows[0].state !== undefined ){
+            if ( (JSON.parse(rows[0].state)).state != 'SUCCEEDED'  ){
+              const updateUserRequestTable = require('./requests/updateUserRequestTable')
+              await updateUserRequestTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+            }
+          }
+        }
+  
+        await client.query(`
+         UPDATE hive_manager.hive_request SET state = '${JSON.stringify(res_obj)}' WHERE job_id = '${job_id}';`)
+        res.send({state : 'ok', status : res_obj})
+      } else {
+        const res_obj = {
+          job_id : job_id,
+          runState : 'loading',
+          state : 'loading',
+          mapProgress : 0,
+          reduceProgress : 0,
+          setupProgress : 0,
+          cleanupProgress : 0,
+          percentComplete : 0,
+        }
+        await client.query(`
+          UPDATE hive_manager.hive_request SET state = '${JSON.stringify(res_obj)}' WHERE job_id = '${job_id}';`)
+        res.send({state : 'ok', status : res_obj})
       }
-
-      await client.query(`
-       UPDATE hive_manager.hive_request SET state = '${JSON.stringify(res_obj)}' WHERE job_id = '${job_id}';`)
-      res.send({state : 'ok', status : res_obj})
     } catch (err) {
       console.log('GET_JOB_STATUS_ERROR',err)
       res.send({state : 'error',place : 'GET_JOB_STATUS',error : err })
@@ -414,7 +433,7 @@ module.exports = function setup(app) {
     try{
       //console.log('GET_JOBS_OK')
       const { rows } = await client.query(`
-        SELECT job_id,request,state,date FROM hive_manager.hive_request WHERE login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}'
+        SELECT job_id,request,state,date FROM hive_manager.hive_request WHERE login = '${req.cookies.login || req.signedCookies.login || 'NON_LOGIN'}'
         ORDER BY date DESC
       `)
       //console.log('GET_JOBS_DONE')
@@ -430,7 +449,7 @@ module.exports = function setup(app) {
     try{
       const job_id = req.query.job_id;
       await client.query(`
-        DELETE from hive_manager.hive_request WHERE job_id='${job_id}'  AND login = '${req.cookies.login || req.signedCookies.login || 'DEFAULT'}';
+        DELETE from hive_manager.hive_request WHERE job_id='${job_id}'  AND login = '${req.cookies.login || req.signedCookies.login || 'NON_LOGIN'}';
       `)
       res.send({state : 'ok'})
     } catch(err){

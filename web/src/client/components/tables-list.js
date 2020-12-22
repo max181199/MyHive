@@ -128,7 +128,6 @@ const NoWrap = styled.span`
 
 const TableName = styled.span`
   padding-left : 6px;
-  margin-right : 10px;
   white-space: nowrap;
   display : flex;
   overflow : hidden;
