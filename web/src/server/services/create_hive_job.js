@@ -28,11 +28,12 @@ const create_hive_job = (res , user_req , login) => {
               while( job_id == null){
                 let jobs = await _axiosGet('LACRIMOSA','http://10.106.79.70:50111/templeton/v1/jobs?user.name=administrator') || [];
                 for (let i = jobs.length - 1 ; i >= jobs.length - 30; i--) { // 30 эврестическое число в будущем может потребоваться изменить
-                  //console.log('JOBS::',jobs[i]);
+                  console.log('JOBS::',jobs[i]);
                   let info = await _axiosGet('For Whom The Bell Tolls',`http://10.106.79.70:50111/templeton/v1/jobs/${jobs[i]["id"]}?user.name=administrator`);
                   //console.log(info["profile"]["jobId"],info["profile"]["jobName"],time,info["profile"]["jobName"].startsWith(`--${time}`) );
+                  console.log('state',job_id);
                   if ( info["profile"]["jobName"].startsWith(`--${time}`)  ){
-                    //console.log("FOUND", info["profile"]["jobId"] )
+                    console.log("FOUND", info["profile"]["jobId"] )
                     job_id = info["profile"]["jobId"];
                     resolve({
                       state : 'ok',
@@ -42,6 +43,13 @@ const create_hive_job = (res , user_req , login) => {
                   }
                 }
               }
+            }).catch( err => {
+              console.log('CREATE_HIVE_ASYNC_HIVE_ERROR',err)
+              resolve({
+                state : 'error',
+                error : err,
+                place : 'CREATE_HIVE_JOB'
+              })
             });
 
            

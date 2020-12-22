@@ -4,6 +4,7 @@ const { client2,client } = require('../services/pg');
 const { promisify } = require('util');
 const createTable = require('./requests/createTable');
 const { _axiosGet,_axiosPost,_axiosDelete } = require('../services/axios');
+const moment = require('moment');
 const { throws } = require('assert');
 const unlinkAsync = promisify(fs.unlink)
 const readline = require('readline');
@@ -364,15 +365,20 @@ module.exports = function setup(app) {
     console.log('TST:::',tsm)
     // Создаем джобу
     const { create_hive_job } = require('../services/create_hive_job')
-    const result = await create_hive_job(res,req.body.user_req,req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+    let result = await create_hive_job(res,req.body.user_req,req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
     console.log('CRJ:::',result)
     // Обновляем в БД информациею о джобе
     if ( result.state === 'ok'){
       await client.query(`
        UPDATE hive_manager.hive_request SET job_id = '${result.job_id}', state = '{"state":"creating","job_id":"${result.job_id}"}' WHERE job_id = '${key}';`)
     } else {
+      let time = moment().format('YYYYMMDDHHmmss');
       await client.query(`
-       UPDATE hive_manager.hive_request SET job_id = '${result.job_id}', state = '{"state":"cancel","job_id":"${result.job_id}"}' WHERE job_id = '${key}';`)
+       UPDATE hive_manager.hive_request SET job_id = '${time}', state = '{"state":"cancel","job_id":"${time}"}' WHERE job_id = '${key}';`)
+      result = {
+        state : 'ok',
+        job_id : time
+      }
     }
     res.send(result)
   })
@@ -395,7 +401,7 @@ module.exports = function setup(app) {
         }
         if ( result.status.state == 'SUCCEEDED'){
           let { rows } = await client.query(`
-            SELECT state FROM hive_manager.hive_request WHERE job_id = '${job_id}'
+            SELECT state,request FROM hive_manager.hive_request WHERE job_id = '${job_id}'
           `)
           if (rows[0] != undefined && rows[0].state !== undefined ){
             if ( (JSON.parse(rows[0].state)).state != 'SUCCEEDED'  ){

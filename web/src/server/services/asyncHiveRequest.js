@@ -42,7 +42,7 @@ const asyncHiveRequest = async (req) => {
 
               }).catch( (err) => {
                 console.log('HIVE_REQUEST_ERROR-first_cath:::',err)
-                resolve({
+                reject({
                     status : 'error',
                     error : err,
                     place : 'hive_manager.hive_request'

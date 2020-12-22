@@ -11,14 +11,14 @@ const Root = styled.div`
 
 const History = ({ setValue,jobs, getJobs, set_request }) => {
 
-
+  //console.log(global);
   const [global, set_global] = useState({})
 
   useEffect(()=>{
 
     jobs.forEach(job =>{
       let state = JSON.parse(job.state);
-      if ( state.state == 'SUCCEEDED' || state.state == 'FILED' || state.state == 'KILLED' ){
+      if ( state.state == 'SUCCEEDED' || state.state == 'FILED' || state.state == 'KILLED' || state.state == 'cancel' ){
         update_global({[job.job_id] : create_view(state)})
       }
     })
@@ -30,7 +30,7 @@ const History = ({ setValue,jobs, getJobs, set_request }) => {
       //console.log("LOCALE_JOB",local_job);
       local_job.forEach(job => {
         let state = JSON.parse(job.state);
-        if ( state.state == 'SUCCEEDED' || state.state == 'FILED' || state.state == 'KILLED' ){
+        if ( state.state == 'SUCCEEDED' || state.state == 'FILED' || state.state == 'KILLED' || state.state == 'cancel'){
           //update_global({[job.job_id] : create_view(state)})
         } else {
           getJobStatus(job.job_id).then ( data=>{
@@ -93,7 +93,16 @@ const History = ({ setValue,jobs, getJobs, set_request }) => {
           doubleWord : null,
           doublePercent : null
         })
-    } else if (status.state == 'creating') {
+    } else if (status.state == 'cancel') {
+      return (
+        {
+          color: 'black',
+          word: 'Ошибка',
+          percent: 100,
+          doubleWord : null,
+          doublePercent : null
+        })
+    }else if (status.state == 'creating') {
       return (
         {
           color: '#2196f3',
