@@ -22,3 +22,11 @@ CREATE TABLE IF NOT EXISTS hive_manager.altertableinfo (
     newname TEXT,
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
+
+CREATE TABLE IF NOT EXISTS hive_manager.requestdata (
+    id SERIAL PRIMARY KEY,
+    login TEXT,
+    req TEXT,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+)
+ 

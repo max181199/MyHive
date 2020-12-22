@@ -399,8 +399,13 @@ module.exports = function setup(app) {
           `)
           if (rows[0] != undefined && rows[0].state !== undefined ){
             if ( (JSON.parse(rows[0].state)).state != 'SUCCEEDED'  ){
-              const updateUserRequestTable = require('./requests/updateUserRequestTable')
-               updateUserRequestTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+                // Считаем что наш запрос завершился хорошо запомним данные о нем
+                await client.query(` 
+                  INSERT INTO hive_manager.requestdata (login,req) 
+                  VALUES ('${req.cookies.login || req.signedCookies.login || 'NON_LOGIN' }','${rows[0].request}')
+                `);
+                const updateUserRequestTable = require('./requests/updateUserRequestTable')
+                updateUserRequestTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
             }
           }
         }
