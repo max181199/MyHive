@@ -397,10 +397,10 @@ module.exports = function setup(app) {
           let { rows } = await client.query(`
             SELECT state FROM hive_manager.hive_request WHERE job_id = '${job_id}'
           `)
-          if ( rows[0].state !== undefined ){
+          if (rows[0] != undefined && rows[0].state !== undefined ){
             if ( (JSON.parse(rows[0].state)).state != 'SUCCEEDED'  ){
               const updateUserRequestTable = require('./requests/updateUserRequestTable')
-              await updateUserRequestTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
+               updateUserRequestTable(req.cookies.login || req.signedCookies.login || 'NON_LOGIN')
             }
           }
         }

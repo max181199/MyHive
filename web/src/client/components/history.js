@@ -24,10 +24,10 @@ const History = ({ setValue,jobs, getJobs, set_request }) => {
     })
 
     let int_id = setInterval(async () => {
-      console.log('Tic-tak')
+      //console.log('Tic-tak')
       // Знаем все текущие работы
       let local_job = (await getQuery('/get_jobs')).rows
-      console.log("LOCALE_JOB",local_job);
+      //console.log("LOCALE_JOB",local_job);
       local_job.forEach(job => {
         let state = JSON.parse(job.state);
         if ( state.state == 'SUCCEEDED' || state.state == 'FILED' || state.state == 'KILLED' ){
@@ -77,8 +77,11 @@ const History = ({ setValue,jobs, getJobs, set_request }) => {
   // }, [jobs.length])
 
   const update_global = (obj) => {
-    set_global({ ...global, ...obj })
+    set_global(global => ({ ...global, ...obj }))
+    // set_global({ ...global, ...obj })
   }
+
+  //console.log(global);
 
   const create_view = (status) => {
     if (status.state == 'KILLED') {
@@ -129,7 +132,6 @@ const History = ({ setValue,jobs, getJobs, set_request }) => {
     } else if (status.state == 'FAILED') {
       return (
         {
-
           color: '#ff5722',
           word: 'Ошибка',
           percent: 100,
