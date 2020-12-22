@@ -12,37 +12,69 @@ const Root = styled.div`
 const History = ({ setValue,jobs, getJobs, set_request }) => {
 
 
-  const [global, set_global] = useState([])
+  const [global, set_global] = useState({})
 
-  useEffect(() => {
-    let int = setInterval( async () => {
-      let nd_update = []
-      let un_update = jobs
-        .reduce((y, x) => {
-          let state = JSON.parse(x.state)
-          if (state.state == 'SUCCEEDED' || state.state == 'FILED' || state.state == 'KILLED') {
-            return ({ ...y, [x.job_id]: create_view(state) })
-          } else {
-            //console.log('STATE:',state.state)
-            nd_update.push(getJobStatus(x.job_id))
-            return y
-          }
-        }, {})
-        nd_update = await Promise.all(nd_update)
-        update_global({ ...un_update,...nd_update.reduce((y,x)=>{
-          let state = x
-          return ({ ...y, [state.job_id]: create_view(state) })
-        },{})})
-    }, 5000)
+  useEffect(()=>{
 
-    if (jobs.length !== 0) {
-      update_global(jobs.reduce((y, x) => {
-        return ({ ...y, [x.job_id]: create_view(JSON.parse(x.state)) })
-      }, {}))
-    } else {clearInterval(int)}
+    jobs.forEach(job =>{
+      let state = JSON.parse(job.state);
+      if ( state.state == 'SUCCEEDED' || state.state == 'FILED' || state.state == 'KILLED' ){
+        update_global({[job.job_id] : create_view(state)})
+      }
+    })
 
-    return (() => { clearInterval(int) })
-  }, [jobs])
+    let int_id = setInterval(async () => {
+      console.log('Tic-tak')
+      // Знаем все текущие работы
+      let local_job = (await getQuery('/get_jobs')).rows
+      console.log("LOCALE_JOB",local_job);
+      local_job.forEach(job => {
+        let state = JSON.parse(job.state);
+        if ( state.state == 'SUCCEEDED' || state.state == 'FILED' || state.state == 'KILLED' ){
+          //update_global({[job.job_id] : create_view(state)})
+        } else {
+          getJobStatus(job.job_id).then ( data=>{
+            update_global({[job.job_id] : create_view(data)})
+          })
+        }
+      });
+    }, 5000);
+    return( ()=>{clearInterval(int_id)})
+  },[])
+
+  // useEffect( async () => {
+    
+  //   if (jobs.length !== 0) {
+  //     update_global(jobs.reduce((y, x) => {
+  //       return ({ ...y, [x.job_id]: create_view(JSON.parse(x.state)) })
+  //     }, {}))
+  //   }
+
+  //   console.log("jobs",jobs)
+  //   let int = setInterval( async () => {
+  //     console.log('INT')
+  //     let nd_update = []
+  //     let un_update = jobs
+  //       .reduce((y, x) => {
+  //         let state = JSON.parse(x.state)
+  //         if (state.state == 'SUCCEEDED' || state.state == 'FILED' || state.state == 'KILLED') {
+  //           return ({ ...y, [x.job_id]: create_view(state) })
+  //         } else {
+  //           //console.log('STATE:',state.state)
+  //           nd_update.push(getJobStatus(x.job_id))
+  //           return y
+  //         }
+  //       }, {})
+  //       console.log('TIME-1');
+  //       nd_update = await Promise.all(nd_update)
+  //       console.log('TIME-2');
+  //       update_global({ ...un_update,...nd_update.reduce((y,x)=>{
+  //         let state = x
+  //         return ({ ...y, [state.job_id]: create_view(state) })
+  //       },{})})
+  //   },5000)
+
+  // }, [jobs.length])
 
   const update_global = (obj) => {
     set_global({ ...global, ...obj })
